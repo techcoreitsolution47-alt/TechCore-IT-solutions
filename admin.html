@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechCore Admin Panel | Secure Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK (Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --secondary: #0f172a;
+            --light: #f8fafc;
+            --white: #ffffff;
+            --danger: #ef4444;
+            --success: #10b981;
+            --whatsapp-color: #25D366;
+            --email-btn: #ea4335;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #f1f5f9; color: #334155; padding: 20px; }
+
+        /* Login Verification Overlay Modal */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-box {
+            background: var(--white);
+            padding: 35px 30px;
+            border-radius: 12px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .login-box h3 { color: var(--secondary); margin-bottom: 8px; }
+        .login-box p { color: #64748b; font-size: 0.85rem; margin-bottom: 20px; }
+
+        .auth-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-auth-option {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-auth-option.active {
+            border-color: var(--primary);
+            background: #f0f9ff;
+            color: var(--primary-dark);
+        }
+
+        .otp-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 4px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            margin-bottom: 15px;
+        }
+
+        .otp-input:focus { border-color: var(--primary); }
+
+        .btn-verify {
+            width: 100%;
+            background: var(--primary);
+            color: var(--white);
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-verify:hover { background: var(--primary-dark); }
+
+        /* Admin Header & Layout */
+        .admin-header {
+            background: var(--secondary);
+            color: var(--white);
+            padding: 20px 30px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+        }
+
+        .stat-card h3 { font-size: 0.9rem; color: #64748b; }
+        .stat-card p { font-size: 1.8rem; font-weight: 700; color: var(--secondary); }
+
+        .controls-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .search-box, .filter-box {
+            padding: 10px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            background: var(--white);
+        }
+
+        .search-box { flex: 1; min-width: 250px; }
+
+        .table-responsive {
+            background: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th { background: #e2e8f0; color: var(--secondary); padding: 12px 15px; }
+        td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        tr:hover { background: #f8fafc; }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-inquiry { background: #e0f2fe; color: #0369a1; }
+        .badge-quote { background: #fef3c7; color: #b45309; }
+        .badge-amc { background: #d1fae5; color: #047857; }
+
+        .status-select { padding: 5px; border-radius: 4px; font-size: 0.8rem; }
+        .action-btn { color: var(--danger); cursor: pointer; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Admin Authentication Modal (WhatsApp / Mail Verification) -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <i class="fa-solid fa-user-shield" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 10px;"></i>
+            <h3>Admin Access Verification</h3>
+            <p>Select verification channel to receive Security OTP</p>
+
+            <div class="auth-options">
+                <button type="button" class="btn-auth-option active" id="btnWa" onclick="selectAuthMode('whatsapp')">
+                    <i class="fa-brands fa-whatsapp" style="color: var(--whatsapp-color);"></i> WhatsApp
+                </button>
+                <button type="button" class="btn-auth-option" id="btnMail" onclick="selectAuthMode('email')">
+                    <i class="fa-solid fa-envelope" style="color: var(--email-btn);"></i> Mail
+                </button>
+            </div>
+
+            <button type="button" class="btn-verify" id="btnSendOtp" onclick="sendSecurityOTP()" style="margin-bottom: 15px; background: #334155;">
+                Get Verification Code
+            </button>
+
+            <div id="otpInputGroup" style="display: none;">
+                <input type="text" id="otpCodeInput" class="otp-input" placeholder="0 0 0 0 0 0" maxlength="6">
+                <button type="button" class="btn-verify" onclick="verifyAdminOTP()">Verify & Access Panel</button>
+            </div>
+            
+            <p id="authMsg" style="margin-top: 10px; color: var(--primary); font-weight: 600; font-size: 0.8rem;"></p>
+        </div>
+    </div>
+
+    <!-- Admin Panel Interface -->
+    <div class="admin-header">
+        <h2><i class="fa-solid fa-user-shield"></i> TechCore Admin Dashboard</h2>
+        <div>
+            <a href="https://techcoreitsolution47-alt.github.io/TechCore-IT-solutions/" target="_blank" style="color:#38bdf8; text-decoration:none; margin-right: 15px;"><i class="fa-solid fa-globe"></i> View Website</a>
+            <button onclick="logoutAdmin()" style="background: var(--danger); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Submissions</h3>
+            <p id="totalCount">0</p>
+        </div>
+        <div class="stat-card" style="border-color: #0369a1;">
+            <h3>Direct Inquiries</h3>
+            <p id="inquiryCount">0</p>
+        </div>
+        <div class="stat-card" style="border-color: #b45309;">
+            <h3>Quick Quotes</h3>
+            <p id="quoteCount">0</p>
+        </div>
+        <div class="stat-card" style="border-color: #047857;">
+            <h3>AMC Requests</h3>
+            <p id="amcCount">0</p>
+        </div>
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search by Name, Phone, Location or Equipment..." onkeyup="filterData()">
+        
+        <select id="typeFilter" class="filter-box" onchange="filterData()">
+            <option value="ALL">All Types</option>
+            <option value="Inquiry">Direct Inquiry</option>
+            <option value="Quick Quote">Quick Quote</option>
+            <option value="AMC Request">AMC Request</option>
+        </select>
+    </div>
+
+    <!-- Submissions Table -->
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Type</th>
+                    <th>Customer Info</th>
+                    <th>Location</th>
+                    <th>Selected Equipment / Services</th>
+                    <th>Remarks / File</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="submissionTableBody">
+                <tr><td colspan="8" style="text-align:center; padding: 20px;">Please complete verification to unlock live submissions.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const adminMobile = "8368784998";
+        const adminEmail = "techcoreitsolution47@gmail.com";
+        let currentAuthMode = "whatsapp";
+        let generatedOTP = "";
+
+        // FIREBASE CONFIGURATION
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIF4lvtKMfCBcbWzWPvBSodBIU31rdQ0M",
+            authDomain: "techcore-it-solutions.firebaseapp.com",
+            projectId: "techcore-it-solutions",
+            storageBucket: "techcore-it-solutions.firebasestorage.app",
+            messagingSenderId: "467350961150",
+            appId: "1:467350961150:web:769bfc70f42d8a5b54deaf",
+            measurementId: "G-LHW74L17S7"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function selectAuthMode(mode) {
+            currentAuthMode = mode;
+            document.getElementById('btnWa').classList.toggle('active', mode === 'whatsapp');
+            document.getElementById('btnMail').classList.toggle('active', mode === 'email');
+        }
+
+        function sendSecurityOTP() {
+            generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+            const msgBox = document.getElementById('authMsg');
+
+            if (currentAuthMode === 'whatsapp') {
+                const text = `*TechCore Admin Login Code:* ${generatedOTP}%0AUse this security code to access the Admin Dashboard.`;
+                window.open(`https://wa.me/91${adminMobile}?text=${text}`, '_blank');
+                msgBox.innerText = `OTP ${generatedOTP} sent via WhatsApp to +91 ${adminMobile}`;
+            } else {
+                const subject = `TechCore Admin Verification Code`;
+                const body = `Your Security Verification Code to access Admin Dashboard is: ${generatedOTP}`;
+                window.location.href = `mailto:${adminEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                msgBox.innerText = `OTP ${generatedOTP} prepared for Mail: ${adminEmail}`;
+            }
+
+            document.getElementById('otpInputGroup').style.display = 'block';
+            document.getElementById('btnSendOtp').style.display = 'none';
+        }
+
+        function verifyAdminOTP() {
+            const entered = document.getElementById('otpCodeInput').value.trim();
+            if (entered === generatedOTP && generatedOTP !== "") {
+                sessionStorage.setItem('techcore_admin_verified', 'true');
+                document.getElementById('loginOverlay').style.display = 'none';
+                initRealtimeDashboard();
+            } else {
+                alert("Invalid Verification Code! Please try again.");
+            }
+        }
+
+        function checkSessionAccess() {
+            if (sessionStorage.getItem('techcore_admin_verified') === 'true') {
+                document.getElementById('loginOverlay').style.display = 'none';
+                initRealtimeDashboard();
+            }
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('techcore_admin_verified');
+            location.reload();
+        }
+
+        function initRealtimeDashboard() {
+            db.collection("submissions").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                const tbody = document.getElementById('submissionTableBody');
+                tbody.innerHTML = '';
+
+                let total = snapshot.size, inquiry = 0, quote = 0, amc = 0;
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: #94a3b8;">No customer submissions found yet.</td></tr>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const item = doc.data();
+                    const id = doc.id;
+
+                    if(item.type === 'Inquiry') inquiry++;
+                    if(item.type === 'Quick Quote') quote++;
+                    if(item.type === 'AMC Request') amc++;
+
+                    let badgeClass = 'badge-inquiry';
+                    if(item.type === 'Quick Quote') badgeClass = 'badge-quote';
+                    if(item.type === 'AMC Request') badgeClass = 'badge-amc';
+
+                    const dateStr = item.timestamp ? new Date(item.timestamp.seconds * 1000).toLocaleString() : 'Just Now';
+
+                    let row = `
+                        <tr>
+                            <td><small>${dateStr}</small></td>
+                            <td><span class="badge ${badgeClass}">${item.type}</span></td>
+                            <td>
+                                <strong>${item.name}</strong><br>
+                                📞 <a href="tel:${item.phone}">${item.phone}</a><br>
+                                ${item.email ? '✉️ ' + item.email : ''}
+                            </td>
+                            <td>${item.location || 'N/A'}</td>
+                            <td><strong>${item.equipment}</strong></td>
+                            <td>
+                                ${item.remarks || 'N/A'}<br>
+                                ${item.file ? '<small style="color:#0284c7;">📎 ' + item.file + '</small>' : ''}
+                            </td>
+                            <td>
+                                <select class="status-select" onchange="updateStatus('${id}', this.value)">
+                                    <option value="Pending" ${item.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                                    <option value="Contacted" ${item.status === 'Contacted' ? 'selected' : ''}>📞 Contacted</option>
+                                    <option value="Completed" ${item.status === 'Completed' ? 'selected' : ''}>✅ Completed</option>
+                                </select>
+                            </td>
+                            <td>
+                                <i class="fa-solid fa-trash-can action-btn" onclick="deleteEntry('${id}')" title="Delete"></i>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+                document.getElementById('totalCount').innerText = total;
+                document.getElementById('inquiryCount').innerText = inquiry;
+                document.getElementById('quoteCount').innerText = quote;
+                document.getElementById('amcCount').innerText = amc;
+            });
+        }
+
+        function updateStatus(docId, newStatus) {
+            db.collection("submissions").doc(docId).update({ status: newStatus });
+        }
+
+        function deleteEntry(docId) {
+            if(confirm("Are you sure you want to delete this customer record?")) {
+                db.collection("submissions").doc(docId).delete();
+            }
+        }
+
+        function filterData() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const filterValue = document.getElementById('typeFilter').value;
+            const rows = document.querySelectorAll('#submissionTableBody tr');
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                const matchesSearch = text.includes(searchValue);
+                const matchesType = filterValue === 'ALL' || text.includes(filterValue.toLowerCase());
+
+                if(matchesSearch && matchesType) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        window.onload = checkSessionAccess;
+    </script>
+</body>
+</html>
