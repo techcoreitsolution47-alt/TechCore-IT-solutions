@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechCore Admin Panel | Customer Hub & Demand Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --secondary: #0f172a;
+            --light: #f8fafc;
+            --white: #ffffff;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --gdrive-color: #0F9D58;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #f1f5f9; color: #334155; padding: 20px; }
+
+        /* Login Modal */
+        .login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95); z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .login-box {
+            background: var(--white); padding: 35px 30px; border-radius: 12px;
+            max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center;
+        }
+
+        .login-box h3 { color: var(--secondary); margin-bottom: 8px; }
+        .login-box p { color: #64748b; font-size: 0.85rem; margin-bottom: 20px; }
+        .form-input-group { text-align: left; margin-bottom: 15px; }
+        .form-input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--secondary); margin-bottom: 5px; }
+        .login-input { width: 100%; padding: 10px 12px; font-size: 0.95rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+        .btn-login { width: 100%; background: var(--primary); color: var(--white); padding: 12px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        .btn-login:hover { background: var(--primary-dark); }
+
+        .admin-header {
+            background: var(--secondary); color: var(--white); padding: 18px 25px; border-radius: 10px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
+        }
+
+        /* Top Action Buttons */
+        .btn-nav-action {
+            padding: 9px 15px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; text-decoration: none; color: #fff; transition: 0.2s;
+        }
+        .btn-customer-hub { background: var(--purple); }
+        .btn-customer-hub:hover { background: #7c3aed; }
+        .btn-upload-prod { background: #2563eb; }
+        .btn-upload-prod:hover { background: #1d4ed8; }
+        .btn-gdrive-folder { background: var(--gdrive-color); }
+        .btn-gdrive-folder:hover { background: #0b8043; }
+
+        /* Navigation Tabs */
+        .admin-nav-tabs {
+            display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; overflow-x: auto;
+        }
+        .tab-btn {
+            background: var(--white); border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; color: #475569; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.3);
+        }
+
+        .tab-content-panel { display: none; }
+        .tab-content-panel.active { display: block; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: var(--white); padding: 18px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
+        .stat-card h3 { font-size: 0.85rem; color: #64748b; font-weight: 600; }
+        .stat-card p { font-size: 1.7rem; font-weight: 700; color: var(--secondary); margin-top: 4px; }
+
+        /* Controls & Search */
+        .controls-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; justify-content: space-between; }
+        .search-box, .filter-box { padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: var(--white); }
+        .search-box { flex: 1; min-width: 250px; }
+
+        /* Tables */
+        .table-responsive { background: var(--white); border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow-x: auto; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+        th { background: #e2e8f0; color: var(--secondary); padding: 12px 14px; font-weight: 700; }
+        td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        tr:hover { background: #f8fafc; }
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+        .badge-inquiry { background: #e0f2fe; color: #0369a1; }
+        .badge-quote { background: #fef3c7; color: #b45309; }
+        .badge-amc { background: #d1fae5; color: #047857; }
+        .badge-cart { background: #ede9fe; color: #6d28d9; }
+
+        .status-select { padding: 5px; border-radius: 4px; font-size: 0.8rem; border: 1px solid #cbd5e1; outline: none; }
+        .action-btn-group { display: flex; gap: 10px; align-items: center; }
+        .action-btn-delete { color: var(--danger); cursor: pointer; font-size: 1.1rem; }
+        .action-btn-edit { color: var(--primary); cursor: pointer; font-size: 1.1rem; }
+
+        .demand-tag {
+            background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8rem; display: inline-block; margin: 2px;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 11000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: #fff; border-radius: 12px; max-width: 520px; width: 100%; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 15px; }
+        .modal-header h3 { color: var(--secondary); font-size: 1.2rem; }
+        .close-modal-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; }
+        .form-group { margin-bottom: 14px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #334155; }
+        .form-group input, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; outline: none; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .btn-cancel { background: #e2e8f0; color: #334155; padding: 9px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn-submit-prod { background: var(--primary); color: #fff; padding: 9px 18px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- Admin Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <i class="fa-solid fa-lock" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 10px;"></i>
+            <h3>Admin Login</h3>
+            <p>Enter Username and Password</p>
+
+            <form onsubmit="event.preventDefault(); verifyAdminLogin();">
+                <div class="form-input-group">
+                    <label for="adminUsername">Username</label>
+                    <input type="text" id="adminUsername" class="login-input" placeholder="Enter username" required>
+                </div>
+
+                <div class="form-input-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" class="login-input" placeholder="Enter password" required>
+                </div>
+
+                <button type="submit" class="btn-login"><i class="fa-solid fa-right-to-bracket"></i> Login to Dashboard</button>
+            </form>
+            <p id="authMsg" style="margin-top: 15px; color: var(--danger); font-weight: 600; font-size: 0.85rem;"></p>
+        </div>
+    </div>
+
+    <!-- Admin Header -->
+    <div class="admin-header">
+        <div>
+            <h2><i class="fa-solid fa-user-shield"></i> TechCore Master Dashboard</h2>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button onclick="switchTab('customersTab')" class="btn-nav-action btn-customer-hub">
+                <i class="fa-solid fa-users"></i> 👥 Customer Details & Activity
+            </button>
+            <button onclick="openProductModal()" class="btn-nav-action btn-upload-prod">
+                <i class="fa-solid fa-plus-circle"></i> + Upload Product
+            </button>
+            <a href="https://drive.google.com/drive/folders/1WoE-mH_n3F1XCDfQp07_-V87rMUS0LG7" target="_blank" class="btn-nav-action btn-gdrive-folder">
+                <i class="fa-brands fa-google-drive"></i> Drive Storage
+            </a>
+            <a href="https://techcoreitsolution47-alt.github.io/TechCore-IT-solutions/" target="_blank" style="color:#38bdf8; text-decoration:none; font-weight:600;"><i class="fa-solid fa-globe"></i> Website</a>
+            <button onclick="logoutAdmin()" style="background: var(--danger); color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="admin-nav-tabs">
+        <button class="tab-btn active" id="btnTabInquiries" onclick="switchTab('inquiriesTab')">
+            <i class="fa-solid fa-envelope-open-text"></i> Queries & Submissions
+        </button>
+        <button class="tab-btn" id="btnTabCustomers" onclick="switchTab('customersTab')">
+            <i class="fa-solid fa-users-gear"></i> Registered Customers & Cart Activity
+        </button>
+        <button class="tab-btn" id="btnTabDemand" onclick="switchTab('demandTab')">
+            <i class="fa-solid fa-chart-line"></i> Customer Search Requirements
+        </button>
+        <button class="tab-btn" id="btnTabProducts" onclick="switchTab('productsTab')">
+            <i class="fa-solid fa-boxes-stacked"></i> Accessories Catalog
+        </button>
+    </div>
+
+    <!-- Stats Summary Row -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Registered Customers</h3>
+            <p id="totalUsersCount">0</p>
+        </div>
+        <div class="stat-card" style="border-color: #8b5cf6;">
+            <h3>Active Carts / Orders</h3>
+            <p id="totalCartOrdersCount">0</p>
+        </div>
+        <div class="stat-card" style="border-color: #0369a1;">
+            <h3>Queries & Inquiries</h3>
+            <p id="totalInquiriesCount">0</p>
+        </div>
+        <div class="stat-card" style="border-color: #f59e0b;">
+            <h3>Logged Search Queries</h3>
+            <p id="totalSearchCount">0</p>
+        </div>
+    </div>
+
+    <!-- ================= TAB 1: INQUIRIES & ORDERS ================= -->
+    <div id="inquiriesTab" class="tab-content-panel active">
+        <div class="controls-bar">
+            <input type="text" id="searchInquiriesInput" class="search-box" placeholder="🔍 Search inquiries by Name, Phone, Location..." onkeyup="filterInquiries()">
+            <select id="typeInquiryFilter" class="filter-box" onchange="filterInquiries()">
+                <option value="ALL">All Types</option>
+                <option value="Inquiry">Direct Inquiry</option>
+                <option value="Quick Quote">Quick Quote</option>
+                <option value="AMC Request">AMC Request</option>
+            </select>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Type</th>
+                        <th>Customer Info</th>
+                        <th>Location</th>
+                        <th>Equipment / Requirement</th>
+                        <th>Remarks / Drive File</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="submissionTableBody">
+                    <tr><td colspan="8" style="text-align:center; padding: 20px;">Loading customer queries...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= TAB 2: CUSTOMERS & CART ACTIVITY ================= -->
+    <div id="customersTab" class="tab-content-panel">
+        <div class="controls-bar">
+            <input type="text" id="searchCustomerInput" class="search-box" placeholder="🔍 Search Customer by Name, Mobile, Email, Cart item..." onkeyup="filterCustomers()">
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer Name</th>
+                        <th>Contact Number</th>
+                        <th>Email Address</th>
+                        <th>Registered Date</th>
+                        <th>Items in Cart</th>
+                        <th>Orders / Purchases</th>
+                        <th>Last Action</th>
+                    </tr>
+                </thead>
+                <tbody id="customersTableBody">
+                    <tr><td colspan="7" style="text-align:center; padding: 20px;">Loading customer details...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= TAB 3: CUSTOMER SEARCH DEMAND INSIGHTS ================= -->
+    <div id="demandTab" class="tab-content-panel">
+        <div class="controls-bar">
+            <input type="text" id="searchDemandInput" class="search-box" placeholder="🔍 Search Demand Keywords..." onkeyup="filterDemand()">
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Searched Requirement / Keyword</th>
+                        <th>Search Frequency</th>
+                        <th>Last Searched Date</th>
+                        <th>Detected Customer Location</th>
+                        <th>Action Insight</th>
+                    </tr>
+                </thead>
+                <tbody id="demandTableBody">
+                    <tr><td colspan="5" style="text-align:center; padding: 20px;">Loading customer requirement queries...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= TAB 4: ACCESSORIES CATALOG ================= -->
+    <div id="productsTab" class="tab-content-panel">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Brand</th>
+                        <th>Price (₹)</th>
+                        <th>Stock Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productsAdminTableBody">
+                    <tr><td colspan="7" style="text-align:center; padding: 20px;">Loading accessories...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Product Upload/Edit Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalHeading"><i class="fa-solid fa-cloud-arrow-up" style="color: var(--gdrive-color);"></i> Upload Product</h3>
+                <button class="close-modal-btn" onclick="closeProductModal()">&times;</button>
+            </div>
+            <form onsubmit="handleProductSubmit(event)">
+                <input type="hidden" id="editDocId" value="">
+                <input type="hidden" id="existingImageUrl" value="">
+
+                <div class="form-group">
+                    <label>Product Title *</label>
+                    <input type="text" id="pTitle" required placeholder="e.g. HDMI to VGA Converter">
+                </div>
+                <div class="form-group">
+                    <label>Price (₹) *</label>
+                    <input type="number" id="pPrice" step="0.01" required placeholder="199.00">
+                </div>
+                <div class="form-group">
+                    <label>Brand *</label>
+                    <select id="pBrand" required>
+                        <option value="Multi-Brand">Multi-Brand</option>
+                        <option value="Apple">Apple</option>
+                        <option value="TVS">TVS</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Subcategory *</label>
+                    <select id="pCategory" required>
+                        <option value="Converter">Converter</option>
+                        <option value="HDD & SATA Case">HDD & SATA Case</option>
+                        <option value="CPU Fan">CPU Fan</option>
+                        <option value="USB Hub / Dongle">USB Hub / Dongle</option>
+                        <option value="Splitters & Extenders">Splitters & Extenders</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Stock Status *</label>
+                    <select id="pStatus" required>
+                        <option value="in-stock">In Stock</option>
+                        <option value="low-stock">Few Items Left</option>
+                        <option value="out-of-stock">Out of Stock</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Badge Text</label>
+                    <input type="text" id="pStockText" placeholder="Only 5 items left">
+                </div>
+                <div class="form-group">
+                    <label>Product Image (File under 5 MB):</label>
+                    <input type="file" id="pImageFile" accept="image/*" onchange="handleProductImgFile(event)">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeProductModal()">Cancel</button>
+                    <button type="submit" class="btn-submit-prod" id="btnUploadSubmit">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_DRIVE_API_URL = "https://script.google.com/macros/s/AKfycbz7-huAwY8skJ0Ry-AWQnJQ5wgTExPWca1jPnYIsWY59ZA4rAP-pYeD92IxSoiFTXPa/exec";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIF4lvtKMfCBcbWzWPvBSodBIU31rdQ0M",
+            authDomain: "techcore-it-solutions.firebaseapp.com",
+            projectId: "techcore-it-solutions",
+            storageBucket: "techcore-it-solutions.firebasestorage.app",
+            messagingSenderId: "467350961150",
+            appId: "1:467350961150:web:769bfc70f42d8a5b54deaf",
+            measurementId: "G-LHW74L17S7"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        window.productsLocalCache = {};
+        let selectedProductBase64 = "";
+        let selectedProductFileName = "";
+
+        function verifyAdminLogin() {
+            const userVal = document.getElementById('adminUsername').value.trim();
+            const passVal = document.getElementById('adminPassword').value.trim();
+            if (userVal === "admin" && passVal === "Ark@750300") {
+                sessionStorage.setItem('techcore_admin_verified', 'true');
+                document.getElementById('loginOverlay').style.display = 'none';
+                initAllRealtimeData();
+            } else {
+                document.getElementById('authMsg').innerText = "Incorrect Username or Password!";
+            }
+        }
+
+        function checkSessionAccess() {
+            if (sessionStorage.getItem('techcore_admin_verified') === 'true') {
+                document.getElementById('loginOverlay').style.display = 'none';
+                initAllRealtimeData();
+            }
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('techcore_admin_verified');
+            location.reload();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            if(tabId === 'inquiriesTab') document.getElementById('btnTabInquiries').classList.add('active');
+            if(tabId === 'customersTab') document.getElementById('btnTabCustomers').classList.add('active');
+            if(tabId === 'demandTab') document.getElementById('btnTabDemand').classList.add('active');
+            if(tabId === 'productsTab') document.getElementById('btnTabProducts').classList.add('active');
+        }
+
+        function initAllRealtimeData() {
+            initInquiries();
+            initCustomersAndCarts();
+            initDemandSearchLogs();
+            initRealtimeProducts();
+        }
+
+        // 1. INQUIRIES LISTENER
+        function initInquiries() {
+            db.collection("submissions").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                const tbody = document.getElementById('submissionTableBody');
+                tbody.innerHTML = '';
+                document.getElementById('totalInquiriesCount').innerText = snapshot.size;
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: #94a3b8;">No customer inquiries yet.</td></tr>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const item = doc.data();
+                    const id = doc.id;
+                    const dateStr = item.timestamp ? new Date(item.timestamp.seconds * 1000).toLocaleString() : 'Just Now';
+
+                    let fileHTML = '';
+                    const fileContent = item.file || '';
+                    if (fileContent && (fileContent.startsWith('http://') || fileContent.startsWith('https://'))) {
+                        fileHTML = `<br><a href="${fileContent}" target="_blank" style="color:var(--primary); font-weight:600; text-decoration:underline;"><i class="fa-solid fa-file"></i> View Uploaded File</a>`;
+                    }
+
+                    let row = `
+                        <tr>
+                            <td><small>${dateStr}</small></td>
+                            <td><span class="badge badge-inquiry">${item.type}</span></td>
+                            <td><strong>${item.name}</strong><br>📞 <a href="tel:${item.phone}">${item.phone}</a></td>
+                            <td>${item.location || 'N/A'}</td>
+                            <td><strong>${item.equipment}</strong></td>
+                            <td>${item.remarks || 'N/A'}${fileHTML}</td>
+                            <td>
+                                <select class="status-select" onchange="updateInquiryStatus('${id}', this.value)">
+                                    <option value="Pending" ${item.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                                    <option value="Contacted" ${item.status === 'Contacted' ? 'selected' : ''}>📞 Contacted</option>
+                                    <option value="Completed" ${item.status === 'Completed' ? 'selected' : ''}>✅ Completed</option>
+                                </select>
+                            </td>
+                            <td><i class="fa-solid fa-trash-can action-btn-delete" onclick="deleteRecord('submissions', '${id}')" title="Delete"></i></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            });
+        }
+
+        // 2. REGISTERED CUSTOMERS & CART/PURCHASE ACTIVITY
+        function initCustomersAndCarts() {
+            db.collection("users").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+                const tbody = document.getElementById('customersTableBody');
+                tbody.innerHTML = '';
+                document.getElementById('totalUsersCount').innerText = snapshot.size;
+
+                let activeCartTotal = 0;
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: #94a3b8;">No registered customers yet.</td></tr>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const u = doc.data();
+                    const regDate = u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                    
+                    // Cart Details
+                    let cartItemsHTML = '<span style="color:#94a3b8;">Empty</span>';
+                    if (u.cart && Array.isArray(u.cart) && u.cart.length > 0) {
+                        activeCartTotal++;
+                        cartItemsHTML = u.cart.map(c => `<span class="badge badge-cart"><i class="fa-solid fa-cart-shopping"></i> ${c.title || c}</span>`).join(' ');
+                    }
+
+                    // Purchases Details
+                    let purchasesHTML = '<span style="color:#94a3b8;">No orders yet</span>';
+                    if (u.purchases && Array.isArray(u.purchases) && u.purchases.length > 0) {
+                        purchasesHTML = u.purchases.map(p => `<strong>${p.title || p}</strong> (₹${p.price || ''})`).join('<br>');
+                    }
+
+                    let row = `
+                        <tr>
+                            <td><strong>${u.name || 'Anonymous User'}</strong></td>
+                            <td>📞 <a href="tel:${u.phone}">${u.phone || 'N/A'}</a></td>
+                            <td>${u.email || 'N/A'}</td>
+                            <td>${regDate}</td>
+                            <td>${cartItemsHTML}</td>
+                            <td>${purchasesHTML}</td>
+                            <td><small style="color:#64748b;">${u.lastAction || 'Active'}</small></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+                document.getElementById('totalCartOrdersCount').innerText = activeCartTotal;
+            });
+        }
+
+        // 3. CUSTOMER SEARCH DEMAND / REQUIREMENT LOGS
+        function initDemandSearchLogs() {
+            db.collection("search_analytics").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                const tbody = document.getElementById('demandTableBody');
+                tbody.innerHTML = '';
+                document.getElementById('totalSearchCount').innerText = snapshot.size;
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: #94a3b8;">No customer search requirements logged yet.</td></tr>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const s = doc.data();
+                    const id = doc.id;
+                    const dateStr = s.timestamp ? new Date(s.timestamp.seconds * 1000).toLocaleString() : 'Just Now';
+
+                    let row = `
+                        <tr>
+                            <td><span class="demand-tag"><i class="fa-solid fa-magnifying-glass"></i> ${s.query}</span></td>
+                            <td><strong>${s.count || 1} times</strong></td>
+                            <td><small>${dateStr}</small></td>
+                            <td>📍 ${s.location || 'Delhi NCR'}</td>
+                            <td>
+                                <button class="btn-submit-prod" style="padding:4px 10px; font-size:0.75rem;" onclick="openProductModalWithQuery('${s.query}')">
+                                    + Add Item to Catalog
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            });
+        }
+
+        // 4. ACCESSORIES CATALOG
+        function initRealtimeProducts() {
+            db.collection("accessories").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+                const tbody = document.getElementById('productsAdminTableBody');
+                tbody.innerHTML = '';
+                window.productsLocalCache = {};
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: #94a3b8;">No products uploaded yet.</td></tr>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const item = doc.data();
+                    const id = doc.id;
+                    window.productsLocalCache[id] = item;
+                    const defaultImg = "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=300&q=80";
+
+                    let row = `
+                        <tr>
+                            <td><img src="${item.image || defaultImg}" style="width: 44px; height: 44px; object-fit: contain; border-radius: 4px; border: 1px solid #e2e8f0;"></td>
+                            <td><strong>${item.title}</strong></td>
+                            <td>${item.category}</td>
+                            <td>${item.brand}</td>
+                            <td>₹ ${Number(item.price).toFixed(2)}</td>
+                            <td><span class="badge badge-amc">${item.stockText || item.status}</span></td>
+                            <td>
+                                <div class="action-btn-group">
+                                    <i class="fa-solid fa-pen-to-square action-btn-edit" onclick="openEditProductModal('${id}')" title="Edit"></i>
+                                    <i class="fa-solid fa-trash-can action-btn-delete" onclick="deleteRecord('accessories', '${id}')" title="Delete"></i>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            });
+        }
+
+        function openProductModalWithQuery(queryText) {
+            openProductModal();
+            document.getElementById('pTitle').value = queryText;
+        }
+
+        function openProductModal() {
+            document.getElementById('editDocId').value = "";
+            document.getElementById('pTitle').value = "";
+            document.getElementById('pPrice').value = "";
+            document.getElementById('pStockText').value = "";
+            document.getElementById('productModal').classList.add('active');
+        }
+
+        function openEditProductModal(id) {
+            const product = window.productsLocalCache[id];
+            if (!product) return;
+            document.getElementById('editDocId').value = id;
+            document.getElementById('pTitle').value = product.title || "";
+            document.getElementById('pPrice').value = product.price || "";
+            document.getElementById('pBrand').value = product.brand || "Multi-Brand";
+            document.getElementById('pCategory').value = product.category || "Converter";
+            document.getElementById('pStatus').value = product.status || "in-stock";
+            document.getElementById('pStockText').value = product.stockText || "";
+            document.getElementById('productModal').classList.add('active');
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.remove('active');
+        }
+
+        function handleProductImgFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedProductFileName = file.name;
+                const reader = new FileReader();
+                reader.onload = function(e) { selectedProductBase64 = e.target.result; };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function handleProductSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editDocId').value;
+            const title = document.getElementById('pTitle').value.trim();
+            const price = parseFloat(document.getElementById('pPrice').value);
+            const brand = document.getElementById('pBrand').value;
+            const category = document.getElementById('pCategory').value;
+            const status = document.getElementById('pStatus').value;
+            const stockText = document.getElementById('pStockText').value.trim() || (status === 'in-stock' ? 'In stock' : 'Few items left');
+
+            const finalImage = selectedProductBase64 || "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=300&q=80";
+
+            if (editId) {
+                await db.collection("accessories").doc(editId).update({
+                    title, price, brand, category, status, stockText,
+                    ...(selectedProductBase64 && { image: finalImage })
+                });
+            } else {
+                await db.collection("accessories").add({
+                    title, price, brand, category, status, stockText, image: finalImage,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            closeProductModal();
+        }
+
+        function updateInquiryStatus(docId, newStatus) {
+            db.collection("submissions").doc(docId).update({ status: newStatus });
+        }
+
+        function deleteRecord(collectionName, docId) {
+            if (confirm("Are you sure you want to delete this record?")) {
+                db.collection(collectionName).doc(docId).delete();
+            }
+        }
+
+        function filterInquiries() {
+            const s = document.getElementById('searchInquiriesInput').value.toLowerCase();
+            const type = document.getElementById('typeInquiryFilter').value;
+            document.querySelectorAll('#submissionTableBody tr').forEach(row => {
+                const matchSearch = row.innerText.toLowerCase().includes(s);
+                const matchType = type === 'ALL' || row.innerText.includes(type);
+                row.style.display = (matchSearch && matchType) ? '' : 'none';
+            });
+        }
+
+        function filterCustomers() {
+            const s = document.getElementById('searchCustomerInput').value.toLowerCase();
+            document.querySelectorAll('#customersTableBody tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(s) ? '' : 'none';
+            });
+        }
+
+        function filterDemand() {
+            const s = document.getElementById('searchDemandInput').value.toLowerCase();
+            document.querySelectorAll('#demandTableBody tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(s) ? '' : 'none';
+            });
+        }
+
+        window.onload = checkSessionAccess;
+    </script>
+</body>
+</html>

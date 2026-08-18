@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechCore IT Solutions | Sales, Repair & CCTV Services</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TechCore IT">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2885/2885417.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --secondary: #0f172a;
+            --accent: #10b981;
+            --sms-btn: #2563eb;
+            --email-btn: #ea4335;
+            --whatsapp-color: #25D366;
+            --call-btn: #0284c7;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --white: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        html { scroll-behavior: smooth; }
+        body { background-color: #f1f5f9; color: #334155; line-height: 1.6; }
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        /* Top Bar */
+        .top-bar {
+            background-color: var(--secondary); color: var(--white); font-size: 0.875rem; padding: 8px 5%; display: flex; justify-content: space-between; align-items: center;
+        }
+        .top-bar-info span { margin-right: 20px; }
+        .top-bar-info i { color: var(--primary); margin-right: 5px; }
+
+        /* Header & Navigation */
+        header { background: var(--white); box-shadow: var(--shadow); position: sticky; top: 0; z-index: 1000; }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 12px 5%; max-width: 1350px; margin: 0 auto; gap: 15px; }
+
+        .brand-logo-link { display: flex; align-items: center; text-decoration: none; }
+        .brand-logo-img { height: 75px; width: auto; max-width: 320px; object-fit: contain; display: block; transition: var(--transition); }
+        .brand-logo-img:hover { transform: scale(1.03); }
+
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { font-weight: 600; color: var(--secondary); transition: var(--transition); cursor: pointer; }
+        .nav-links a:hover { color: var(--primary); }
+
+        /* Right Header Actions */
+        .nav-right-actions { display: flex; align-items: center; gap: 10px; }
+
+        .nav-location-btn {
+            display: inline-flex; align-items: center; gap: 6px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; color: #0369a1; font-weight: 600; cursor: pointer; transition: var(--transition); max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .nav-location-btn:hover { background: #e0f2fe; border-color: #7dd3fc; }
+
+        .btn-user-login {
+            display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 6px; background: #f8fafc; border: 1px solid #cbd5e1; font-size: 0.85rem; font-weight: 600; color: var(--secondary); cursor: pointer; transition: var(--transition);
+        }
+        .btn-user-login:hover { background: #e2e8f0; color: var(--primary); border-color: var(--primary); }
+
+        .nav-cart-btn {
+            position: relative; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 11px; font-size: 1rem; color: var(--secondary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: var(--transition);
+        }
+        .nav-cart-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        .cart-badge {
+            position: absolute; top: -6px; right: -6px; background: #ef4444; color: #fff; font-size: 0.7rem; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary); color: var(--white); padding: 9px 15px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;
+        }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+
+        .btn-sms {
+            background-color: var(--sms-btn); color: var(--white); padding: 10px 18px; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-sms:hover { background-color: #1d4ed8; }
+
+        .btn-email {
+            background-color: var(--email-btn); color: var(--white); padding: 10px 18px; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-email:hover { background-color: #c5221f; }
+
+        .btn-call {
+            background-color: var(--accent); color: var(--white); padding: 10px 18px; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-call:hover { background-color: #059669; }
+
+        .btn-submit-db {
+            width: 100%; background-color: #10b981; color: #ffffff; padding: 12px 20px; border-radius: 6px; font-weight: 700; font-size: 1rem; border: none; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+        }
+        .btn-submit-db:hover { background-color: #059669; }
+
+        .pwa-install-bar {
+            display: none; background: #0284c7; color: #fff; padding: 10px 5%; text-align: center; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 600;
+        }
+        .pwa-install-btn {
+            background: #0f172a; color: #fff; padding: 6px 14px; border-radius: 4px; border: none; cursor: pointer; font-weight: 600;
+        }
+
+        .hero {
+            background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('https://images.unsplash.com/photo-1588702547919-26089e690ecc?auto=format&fit=crop&w=1350&q=80') center/cover no-repeat;
+            color: var(--white); padding: 100px 5%; text-align: center;
+        }
+        .hero-content { max-width: 800px; margin: 0 auto; }
+        .hero h1 { font-size: 2.8rem; margin-bottom: 20px; line-height: 1.2; }
+        .hero p { font-size: 1.2rem; margin-bottom: 30px; color: #cbd5e1; }
+        .hero-btns { display: flex; gap: 15px; justify-content: center; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 60px 5%; }
+        .section-title { text-align: center; margin-bottom: 40px; }
+        .section-title h2 { font-size: 2.2rem; color: var(--secondary); margin-bottom: 10px; }
+        .section-title p { color: var(--gray); }
+
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+        .service-card { background: var(--white); border-radius: 10px; padding: 30px; box-shadow: var(--shadow); transition: var(--transition); border-top: 4px solid var(--primary); }
+        .service-card:hover { transform: translateY(-5px); }
+        .service-icon { font-size: 2.5rem; color: var(--primary); margin-bottom: 20px; }
+        .service-card h3 { font-size: 1.3rem; color: var(--secondary); margin-bottom: 15px; }
+        .service-card ul { margin-top: 15px; }
+        .service-card ul li { font-size: 0.95rem; color: var(--gray); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .service-card ul li i { color: var(--accent); font-size: 0.8rem; }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .product-card { background: var(--white); border-radius: 8px; padding: 20px; text-align: center; box-shadow: var(--shadow); transition: var(--transition); }
+        .product-card:hover { transform: translateY(-4px); }
+        .product-icon { font-size: 2rem; color: var(--secondary); margin-bottom: 10px; }
+        .product-card h4 { color: var(--secondary); margin-bottom: 5px; }
+        .product-card p { font-size: 0.875rem; color: var(--gray); }
+
+        .cta-banner { background: var(--secondary); color: var(--white); border-radius: 12px; padding: 40px; text-align: center; margin: 40px auto; }
+        .cta-banner h3 { font-size: 1.8rem; margin-bottom: 15px; }
+
+        .contact-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; background: var(--white); padding: 40px; border-radius: 12px; box-shadow: var(--shadow); }
+        .contact-info h3 { color: var(--secondary); margin-bottom: 20px; }
+        .info-item { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; }
+        .info-item i { font-size: 1.2rem; color: var(--primary); margin-top: 5px; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: var(--secondary); }
+        .form-group input[type="text"],
+        .form-group input[type="password"],
+        .form-group input[type="tel"],
+        .form-group input[type="email"],
+        .form-group input[type="file"],
+        .form-group select,
+        .form-group textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+
+        .equipment-selection-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; max-height: 220px; overflow-y: auto; }
+        .equipment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; background: var(--white); padding: 8px 10px; border-radius: 6px; border: 1px solid #e2e8f0; transition: var(--transition); }
+        .checkbox-item i { color: var(--primary); font-size: 1rem; }
+        .checkbox-item:hover { border-color: var(--primary); background: #f0f9ff; }
+        .checkbox-item input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+
+        .btn-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .right-floating-widgets { position: fixed; bottom: 25px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 12px; }
+        .floating-icon { width: 50px; height: 50px; border-radius: 50px; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.25); transition: var(--transition); }
+        .floating-icon.whatsapp { background-color: var(--whatsapp-color); }
+        .floating-icon.call { background-color: #0284c7; }
+        .floating-icon:hover { transform: scale(1.12); color: #FFF; }
+
+        footer { background: var(--secondary); color: #94a3b8; padding: 30px 5% 20px; text-align: center; font-size: 0.9rem; }
+        footer hr { border: 0; border-top: 1px solid #334155; margin: 20px 0; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--white); padding: 25px 30px; border-radius: 10px; max-width: 650px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative; }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; }
+
+        .auth-tab-buttons { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; gap: 10px; }
+        .auth-tab-btn { flex: 1; padding: 10px 0; background: transparent; border: none; font-size: 0.95rem; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: var(--transition); }
+        .auth-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        @media (max-width: 992px) { .nav-links { display: none; } }
+        @media (max-width: 768px) {
+            .top-bar { display: none; }
+            .hero h1 { font-size: 2rem; }
+            .hero-btns, .btn-group, .equipment-grid { flex-direction: column; grid-template-columns: 1fr; }
+            .nav-right-actions { gap: 6px; }
+            .btn-user-login span { display: none; }
+            .brand-logo-img { height: 55px; max-width: 230px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="pwaInstallBar" class="pwa-install-bar">
+        <span>📲 Install TechCore App on your Phone</span>
+        <button id="pwaInstallBtn" class="pwa-install-btn">Install App</button>
+    </div>
+
+    <div class="right-floating-widgets">
+        <a href="tel:+918368784998" class="floating-icon call" title="Call Now"><i class="fa-solid fa-phone"></i></a>
+        <a href="https://wa.me/918368784998" class="floating-icon whatsapp" target="_blank" title="Chat on WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+    </div>
+
+    <div class="top-bar">
+        <div class="top-bar-info">
+            <span><a href="tel:+918368784998"><i class="fa-solid fa-phone"></i> +91 8368784998</a></span>
+            <span><i class="fa-solid fa-envelope"></i> techcoreitsolution47@gmail.com</span>
+            <span><i class="fa-solid fa-clock"></i> Mon - Sun: 9:30 AM - 8:00 PM</span>
+        </div>
+        <div><span><i class="fa-solid fa-shield-halved"></i> 100% Genuine IT Hardware</span></div>
+    </div>
+
+    <header>
+        <nav>
+            <a href="index.html" class="brand-logo-link" title="TechCore IT Solutions">
+                <img src="logo.png" alt="TechCore IT Solutions" class="brand-logo-img" onerror="this.onerror=null; this.src='logo_2.png';">
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="Accessories.html">Accessories</a></li>
+                <li><a onclick="openAmcModal()">AMC Services</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+
+            <div class="nav-right-actions">
+                <button type="button" class="nav-location-btn" id="autoLocationBtn" onclick="detectLiveLocation()" title="Click to auto-detect location">
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                    <span id="detectedLocationText">Pick Location</span>
+                </button>
+
+                <button type="button" class="btn-user-login" onclick="openLoginModal('login')" title="Account Login & Registration">
+                    <i class="fa-solid fa-user"></i>
+                    <span id="userAccountLabel">Login</span>
+                </button>
+
+                <a href="Accessories.html#cart" class="nav-cart-btn" title="View Cart">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-badge" id="cartBadgeCount">0</span>
+                </a>
+
+                <button class="btn-primary" onclick="openModal()">Get Quote</button>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>Complete IT Solutions, Sales, Repair & CCTV Installation Services</h1>
+            <p>Your one-stop destination for computer sales, fast door-step repair services, CCTV security setups, and high-quality accessories.</p>
+            <div class="hero-btns">
+                <a href="tel:+918368784998" class="btn-primary"><i class="fa-solid fa-phone"></i> Direct Call</a>
+                <a href="https://wa.me/918368784998" class="btn-primary" style="background-color: var(--accent);" target="_blank">
+                    <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="container" id="services">
+        <div class="section-title">
+            <h2>Our Core Services</h2>
+            <p>Reliable hardware solutions and quick technical repair support for home and business</p>
+        </div>
+
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon"><i class="fa-solid fa-laptop"></i></div>
+                <h3>Laptop & Desktop Sales</h3>
+                <p>New and refurbished systems built for gaming, office productivity, and personal use.</p>
+                <ul>
+                    <li><i class="fa-solid fa-check"></i> Branded Laptops (Dell, HP, Lenovo, ASUS)</li>
+                    <li><i class="fa-solid fa-check"></i> Custom Built Gaming & Workstation PCs</li>
+                    <li><i class="fa-solid fa-check"></i> Certified Refurbished Desktops</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                <h3>Laptop & Desktop Repair</h3>
+                <p>Fast chip-level diagnosis and repair by certified hardware technicians.</p>
+                <ul>
+                    <li><i class="fa-solid fa-check"></i> Screen, Battery & Keyboard Replacement</li>
+                    <li><i class="fa-solid fa-check"></i> Motherboard Repair & Liquid Damage Fix</li>
+                    <li><i class="fa-solid fa-check"></i> OS Installation & Malware Removal</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><i class="fa-solid fa-video"></i></div>
+                <h3>CCTV Camera Solutions</h3>
+                <p>Complete HD & IP security surveillance setups for home, shops, and offices.</p>
+                <ul>
+                    <li><i class="fa-solid fa-check"></i> HD Analog & IP Camera Sales</li>
+                    <li><i class="fa-solid fa-check"></i> Complete Cabling & Installation</li>
+                    <li><i class="fa-solid fa-check"></i> Mobile Remote Viewing Configuration</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><i class="fa-solid fa-print"></i></div>
+                <h3>Printer Sales & Repair</h3>
+                <p>Comprehensive printing solutions, maintenance, and ink refill services.</p>
+                <ul>
+                    <li><i class="fa-solid fa-check"></i> Laser & Inkjet Printer Sales</li>
+                    <li><i class="fa-solid fa-check"></i> Cartridge Refilling & Drum Repair</li>
+                    <li><i class="fa-solid fa-check"></i> Paper Jam & Connectivity Troubleshooting</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><i class="fa-solid fa-hard-drive"></i></div>
+                <h3>Data Recovery & Upgrades</h3>
+                <p>Boost your slow computer speed or retrieve critical lost files safely.</p>
+                <ul>
+                    <li><i class="fa-solid fa-check"></i> Hard Drive to SSD Upgrades (5x Faster)</li>
+                    <li><i class="fa-solid fa-check"></i> RAM Memory Expansion</li>
+                    <li><i class="fa-solid fa-check"></i> Deleted & Corrupted File Recovery</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon"><i class="fa-solid fa-network-wired"></i></div>
+                <h3>Networking & AMC Support</h3>
+                <p>End-to-end office networking and Annual Maintenance Contracts for businesses.</p>
+                <ul>
+                    <li><i class="fa-solid fa-check"></i> Wi-Fi Router & LAN Setup</li>
+                    <li><i class="fa-solid fa-check"></i> Corporate Annual Maintenance Contracts</li>
+                    <li><i class="fa-solid fa-check"></i> <a onclick="openAmcModal()" style="color: var(--primary); font-weight: bold; cursor: pointer;"><u>Open AMC Pop-Up Form</u></a></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="container" id="accessories" style="padding-top: 0;">
+        <div class="section-title">
+            <h2>Parts & Accessories</h2>
+            <p>Genuine computer components and peripherals at competitive prices</p>
+        </div>
+
+        <div class="products-grid">
+            <a href="Accessories.html" class="product-card">
+                <div class="product-icon"><i class="fa-solid fa-memory"></i></div>
+                <h4>RAM & SSDs</h4>
+                <p>DDR4/DDR5 RAMs & High-Speed NVMe SSDs</p>
+            </a>
+            <a href="Accessories.html" class="product-card">
+                <div class="product-icon"><i class="fa-solid fa-keyboard"></i></div>
+                <h4>Keyboards & Mice</h4>
+                <p>Wired, Wireless & Gaming Combo Sets</p>
+            </a>
+            <a href="Accessories.html" class="product-card">
+                <div class="product-icon"><i class="fa-solid fa-plug"></i></div>
+                <h4>Adapters & Cables</h4>
+                <p>Original Laptop Chargers, HDMI & LAN Cables</p>
+            </a>
+            <a href="Accessories.html" class="product-card">
+                <div class="product-icon"><i class="fa-solid fa-wifi"></i></div>
+                <h4>Networking Gear</h4>
+                <p>Wi-Fi Routers, Switches & Extenders</p>
+            </a>
+        </div>
+
+        <div class="cta-banner">
+            <h3>Need Emergency Hardware Support or CCTV Installation?</h3>
+            <p style="margin-bottom: 20px;">Contact our technical experts for fast doorstep service.</p>
+            <button class="btn-primary" onclick="openModal()">Book Repair Service</button>
+            <button class="btn-primary" onclick="openAmcModal()" style="background-color: var(--accent); margin-left: 10px;">Book AMC Plan</button>
+            <a href="Accessories.html" class="btn-primary" style="background-color: #2563eb; margin-left: 10px;"><i class="fa-solid fa-bag-shopping"></i> Visit Accessories Store</a>
+        </div>
+    </section>
+
+    <section class="container" id="contact" style="padding-top: 0;">
+        <div class="section-title">
+            <h2>Contact Us & Submit Query</h2>
+            <p>Select required IT Equipment & Accessories, fill details, and submit directly via WhatsApp, Email, or SMS</p>
+        </div>
+
+        <div class="contact-container">
+            <div class="contact-info">
+                <h3>Store Information</h3>
+                <div class="info-item">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <div>
+                        <strong>Address:</strong><br>
+                        TechCore IT Solution, Ghaziabad, UP-201204
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fa-solid fa-phone"></i>
+                    <div>
+                        <strong>Phone / SMS:</strong><br>
+                        <a href="tel:+918368784998">+91 8368784998</a> / +91 7503001287
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fa-solid fa-envelope"></i>
+                    <div>
+                        <strong>Email:</strong><br>
+                        techcoreitsolution47@gmail.com
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fa-solid fa-star"></i>
+                    <div>
+                        <strong>About:</strong><br>
+                        TechCore IT Solutions is a trusted online platform specializing in printer spare parts and electronic components for service centers and businesses. It offers a wide range of quality products at competitive prices, making sourcing easier and more efficient. With a focus on reliability and fast service, TechCore IT Solutions aims to support technicians and resellers across India.
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-form">
+                <form id="inquiryForm">
+                    <div class="form-group">
+                        <label for="name">Your Name *</label>
+                        <input type="text" id="name" required placeholder="Type your Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" required placeholder="9876543210">
+                    </div>
+                    <div class="form-group">
+                        <label for="mail id">E-mail </label>
+                        <input type="text" id="address" required placeholder=" Type your Mail Address">
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Address *</label>
+                        <input type="text" id="address" required placeholder=" Type your Address">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-list-check"></i> Select IT Equipment & Accessories (Tick to select):</label>
+                        <div class="equipment-selection-box">
+                            <div class="equipment-grid">
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="New Laptop / Desktop"> New Laptop/Desktop</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="Refurbished Laptop / PC"> Refurbished Laptop/PC</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="Laptop/Desktop Repair"> Laptop/Desktop Repair</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="RAM / SSD Upgrade"> RAM / SSD Upgrade</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="CCTV Camera & DVR"> CCTV Camera & DVR</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="Printer Repair / Cartridge"> Printer Repair/Refill</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="Wi-Fi Router & Switch"> Wi-Fi Router / Switch</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="Keyboard & Mouse Combo"> Keyboard & Mouse</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="Laptop Original Charger"> Laptop Charger</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="LAN / HDMI / VGA Cables"> LAN/HDMI Cables</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="Server & Networking AMC"> Server & Networking AMC</label>
+                                <label class="checkbox-item"><input type="checkbox" name="equipment" value="Data Recovery Service"> Data Recovery</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Additional Remarks / Details</label>
+                        <textarea id="message" rows="2" placeholder="Mention model, issue, or additional requirements..."></textarea>
+                    </div>
+                    
+                    <button type="button" onclick="submitInquiryOnly()" class="btn-submit-db">
+                        <i class="fa-solid fa-paper-plane"></i> Submit
+                    </button>
+
+                    <div class="btn-group">
+                        <button type="button" onclick="sendInquiryToWhatsApp()" class="btn-primary">
+                            <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                        </button>
+                        <button type="button" onclick="sendDirectEmail()" class="btn-email">
+                            <i class="fa-solid fa-envelope"></i> Email
+                        </button>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal" id="loginModal">
+        <div class="modal-content" style="max-width: 440px;">
+            <span class="close-modal" onclick="closeLoginModal()">&times;</span>
+            
+            <div class="auth-tab-buttons">
+                <button type="button" class="auth-tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login')">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
+                </button>
+                <button type="button" class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register')">
+                    <i class="fa-solid fa-user-plus"></i> Register
+                </button>
+            </div>
+
+            <form id="userLoginForm" onsubmit="handleUserLogin(event)">
+                <div class="form-group">
+                    <label>Email or Mobile Number</label>
+                    <input type="text" id="loginIdentifier" required placeholder="Enter mobile or email">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; padding: 12px; font-size: 0.95rem;">Login to Account</button>
+            </form>
+
+            <form id="userRegisterForm" style="display: none;" onsubmit="handleUserRegister(event)">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="regName" required placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number *</label>
+                    <input type="tel" id="regPhone" required placeholder="Enter 10-digit mobile number">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="regEmail" placeholder="Enter your email (optional)">
+                </div>
+                <div class="form-group">
+                    <label>Create Password *</label>
+                    <input type="password" id="regPassword" required placeholder="Create a secure password">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; padding: 12px; font-size: 0.95rem; background-color: var(--accent);">Create New Account</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="quoteModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h3 style="margin-bottom: 15px; color: var(--secondary);">Request a Quick Quote</h3>
+            
+            <form id="quoteModalForm">
+                <div class="form-group"><label>Full Name *</label><input type="text" id="modalName" required placeholder="Enter name"></div>
+                <div class="form-group"><label>Mobile Number *</label><input type="tel" id="modalPhone" required placeholder="Enter phone number"></div>
+                <div class="form-group"><label>Email Address</label><input type="email" id="modalEmail" placeholder="Enter your email (optional)"></div>
+                <div class="form-group"><label>Location</label><input type="text" id="modalLocation" placeholder="Enter your Location (optional)"></div>
+                
+                <div class="form-group">
+                    <label><i class="fa-solid fa-list-check"></i> Select IT Equipment & Accessories:</label>
+                    <div class="equipment-selection-box">
+                        <div class="equipment-grid">
+                            <label class="checkbox-item"><input type="checkbox" name="modalEquipment" value="New Laptop / Desktop"> New Laptop/Desktop</label>
+                            <label class="checkbox-item"><input type="checkbox" name="modalEquipment" value="Refurbished Laptop / PC"> Refurbished Laptop/PC</label>
+                            <label class="checkbox-item"><input type="checkbox" name="modalEquipment" value="Laptop/Desktop Repair"> Laptop/Desktop Repair</label>
+                            <label class="checkbox-item"><input type="checkbox" name="modalEquipment" value="RAM / SSD Upgrade"> RAM / SSD Upgrade</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="submitQuoteOnly()" class="btn-submit-db"><i class="fa-solid fa-paper-plane"></i> Submit</button>
+
+                <div class="btn-group">
+                    <button type="button" onclick="sendQuoteToWhatsApp()" class="btn-primary"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                    <button type="button" onclick="sendQuoteEmail()" class="btn-email"><i class="fa-solid fa-envelope"></i> Email</button>
+                    <button type="button" onclick="sendQuoteSMS()" class="btn-sms"><i class="fa-solid fa-paper-plane"></i> Free SMS</button>
+                    <a href="tel:+918368784998" class="btn-call"><i class="fa-solid fa-phone"></i> Call Now</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="amcModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeAmcModal()">&times;</span>
+            <h3 style="margin-bottom: 10px; color: var(--secondary);"><i class="fa-solid fa-file-contract" style="color: var(--primary);"></i> AMC Request - Equipment & Upload Details</h3>
+            <p style="margin-bottom: 20px; color: var(--gray); font-size: 0.9rem;">Upload file directly to Google Drive Storage (Limit: Max 5 MB).</p>
+            
+            <form id="amcModalForm">
+                <div class="form-group"><label>Your Full Name *</label><input type="text" id="amcName" required placeholder="Enter full name"></div>
+                <div class="form-group"><label>Mobile Number *</label><input type="tel" id="amcPhone" required placeholder="Enter mobile number"></div>
+                <div class="form-group"><label>Location *</label><input type="text" id="amcLocation" required placeholder="Enter your location"></div>
+                <div class="form-group"><label>Company Name</label><input type="text" id="amcCompany" placeholder="Enter company name (optional)"></div>
+                <div class="form-group"><label>Email Address</label><input type="email" id="amcEmail" placeholder="Enter email (optional)"></div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-square-check"></i> Select Equipment under AMC:</label>
+                    <div class="equipment-selection-box">
+                        <div class="equipment-grid">
+                            <label class="checkbox-item"><input type="checkbox" name="amcEquipment" value="Laptop AMC"><i class="fa-solid fa-laptop"></i> Laptop</label>
+                            <label class="checkbox-item"><input type="checkbox" name="amcEquipment" value="Desktop AMC"><i class="fa-solid fa-desktop"></i> Desktop</label>
+                            <label class="checkbox-item"><input type="checkbox" name="amcEquipment" value="Server AMC"><i class="fa-solid fa-server"></i> Server</label>
+                            <label class="checkbox-item"><input type="checkbox" name="amcEquipment" value="Network AMC"><i class="fa-solid fa-network-wired"></i> Network</label>
+                            <label class="checkbox-item"><input type="checkbox" name="amcEquipment" value="Printer AMC"><i class="fa-solid fa-printer"></i> Printer</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group"><label>Equipment Specification & Quantity Details:</label><textarea id="amcManualDetails" rows="3" placeholder="Enter quantity & details (e.g., 5 Dell Laptops, 2 HP Servers, 3 Canon Printers)..."></textarea></div>
+                <div class="form-group">
+                    <label for="amcFileUpload"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Equipment Image / Document (Max Size: 5 MB):</label>
+                    <input type="file" id="amcFileUpload" accept="image/*,.pdf,.doc,.docx,.txt" onchange="handleFileSelect(event)">
+                    <small id="fileSelectedName" style="color: var(--primary); display: block; margin-top: 5px; font-weight: 500;"></small>
+                </div>
+                <button type="button" onclick="submitAmcOnly()" class="btn-submit-db" id="amcSubmitBtn"><i class="fa-solid fa-paper-plane"></i> Submit</button>
+
+                <div class="btn-group">
+                    <button type="button" onclick="sendAmcToWhatsApp()" class="btn-primary"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                    <button type="button" onclick="sendAmcEmail()" class="btn-email"><i class="fa-solid fa-envelope"></i> Email</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 TechCore IT Solutions. All rights reserved.</p>
+        <hr>
+        <p style="font-size: 0.8rem; color: #64748b;">Providing quality hardware sales and reliable repair services.</p>
+        <p style="margin-top: 5px;"><a href="admin.html" style="color: #64748b; font-size: 0.8rem;"><i class="fa-solid fa-lock"></i> Admin Login</a></p>
+    </footer>
+
+    <script>
+        const GOOGLE_DRIVE_API_URL = "https://script.google.com/macros/s/AKfycbz7-huAwY8skJ0Ry-AWQnJQ5wgTExPWca1jPnYIsWY59ZA4rAP-pYeD92IxSoiFTXPa/exec";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIF4lvtKMfCBcbWzWPvBSodBIU31rdQ0M",
+            authDomain: "techcore-it-solutions.firebaseapp.com",
+            databaseURL: "https://techcore-it-solutions-default-rtdb.firebaseio.com",
+            projectId: "techcore-it-solutions",
+            storageBucket: "techcore-it-solutions.firebasestorage.app",
+            messagingSenderId: "467350961150",
+            appId: "1:467350961150:web:769bfc70f42d8a5b54deaf",
+            measurementId: "G-LHW74L17S7"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const rtdb = firebase.database();
+
+        const targetSMSNumber = "8368784998";
+        const targetEmail = "techcoreitsolution47@gmail.com";
+        let uploadedFileName = "";
+        let uploadedBase64Data = "";
+
+        // Check if user is already logged in
+        const storedUserName = localStorage.getItem('techcore_user_name');
+        if (storedUserName) {
+            document.getElementById('userAccountLabel').innerText = storedUserName.split(' ')[0];
+        }
+
+        // ================= 1. LIVE & TOTAL VISITOR REALTIME TRACKING =================
+        function startVisitorTracking() {
+            if (!sessionStorage.getItem('techcore_visited')) {
+                rtdb.ref('stats/totalVisits').transaction((current) => (current || 0) + 1);
+                sessionStorage.setItem('techcore_visited', 'true');
+            }
+
+            const connectedRef = rtdb.ref('.info/connected');
+            const myPresenceRef = rtdb.ref('stats/liveSessions').push();
+
+            connectedRef.on('value', (snap) => {
+                if (snap.val() === true) {
+                    myPresenceRef.onDisconnect().remove();
+                    myPresenceRef.set({
+                        online: true,
+                        time: Date.now(),
+                        page: 'Home Page'
+                    });
+                }
+            });
+        }
+        startVisitorTracking();
+
+        // ================= 2. AUTOMATIC LOCATION DETECTION =================
+        function detectLiveLocation() {
+            const locText = document.getElementById('detectedLocationText');
+            const locBtn = document.getElementById('autoLocationBtn');
+
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            locText.innerText = "Detecting...";
+            locBtn.style.opacity = "0.7";
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                        const data = await response.json();
+                        
+                        const area = data.address.suburb || data.address.neighbourhood || data.address.city_district || data.address.city || data.address.town || "Delhi NCR";
+                        const city = data.address.city || data.address.state_district || "Delhi";
+
+                        const fullLocationName = `${area}, ${city}`;
+                        locText.innerText = area;
+                        locBtn.title = `Current Location: ${fullLocationName}`;
+                        locBtn.style.opacity = "1";
+
+                        if (document.getElementById('location')) document.getElementById('location').value = fullLocationName;
+                        if (document.getElementById('modalLocation')) document.getElementById('modalLocation').value = fullLocationName;
+                        if (document.getElementById('amcLocation')) document.getElementById('amcLocation').value = fullLocationName;
+
+                        sessionStorage.setItem('techcore_user_location', fullLocationName);
+                    } catch (err) {
+                        locText.innerText = "Delhi NCR";
+                        locBtn.style.opacity = "1";
+                    }
+                },
+                (error) => {
+                    locText.innerText = "Delhi NCR";
+                    locBtn.style.opacity = "1";
+                },
+                { enableHighAccuracy: true, timeout: 8000 }
+            );
+        }
+
+        // ================= 3. LOG CUSTOMER SEARCH DEMAND / REQUIREMENT =================
+        function logCustomerSearchRequirement(query) {
+            if(!query || query.trim().length < 2) return;
+            const cleanQuery = query.trim().toLowerCase();
+            const location = document.getElementById('detectedLocationText').innerText || "Delhi NCR";
+
+            const docId = cleanQuery.replace(/[\/\s#$.\[\]]/g, '_');
+            db.collection("search_analytics").doc(docId).get().then(doc => {
+                if(doc.exists) {
+                    db.collection("search_analytics").doc(docId).update({
+                        count: firebase.firestore.FieldValue.increment(1),
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        location: location
+                    });
+                } else {
+                    db.collection("search_analytics").doc(docId).set({
+                        query: query,
+                        count: 1,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        location: location
+                    });
+                }
+            }).catch(err => console.log(err));
+        }
+
+        // ================= 4. USER AUTH & CUSTOMER REGISTRATION =================
+        function openLoginModal(tab = 'login') { document.getElementById('loginModal').style.display = 'flex'; switchAuthTab(tab); }
+        function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+        function switchAuthTab(tab) {
+            document.getElementById('userLoginForm').style.display = tab === 'login' ? 'block' : 'none';
+            document.getElementById('userRegisterForm').style.display = tab === 'register' ? 'block' : 'none';
+            document.getElementById('tabBtnLogin').classList.toggle('active', tab === 'login');
+            document.getElementById('tabBtnRegister').classList.toggle('active', tab === 'register');
+        }
+
+        function handleUserRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+
+            db.collection("users").add({
+                name, phone, email, password,
+                cart: [], purchases: [], lastAction: 'Registered & Active',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(docRef => {
+                localStorage.setItem('techcore_user_id', docRef.id);
+                localStorage.setItem('techcore_user_name', name);
+                document.getElementById('userAccountLabel').innerText = name.split(' ')[0];
+                alert("Account registered successfully! You are now logged in.");
+                closeLoginModal();
+            }).catch((err) => {
+                alert("Error creating account. Please try again.");
+            });
+        }
+
+        function handleUserLogin(e) {
+            e.preventDefault();
+            const iden = document.getElementById('loginIdentifier').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+
+            db.collection("users").where("phone", "==", iden).where("password", "==", pass).get().then(snap => {
+                if(!snap.empty) {
+                    const u = snap.docs[0].data();
+                    const docId = snap.docs[0].id;
+                    localStorage.setItem('techcore_user_id', docId);
+                    localStorage.setItem('techcore_user_name', u.name);
+                    document.getElementById('userAccountLabel').innerText = u.name.split(' ')[0];
+
+                    db.collection("users").doc(docId).update({
+                        lastAction: 'Logged In at ' + new Date().toLocaleTimeString()
+                    });
+
+                    alert(`Welcome back, ${u.name}!`);
+                    closeLoginModal();
+                } else {
+                    db.collection("users").where("email", "==", iden).where("password", "==", pass).get().then(emailSnap => {
+                        if (!emailSnap.empty) {
+                            const u = emailSnap.docs[0].data();
+                            const docId = emailSnap.docs[0].id;
+                            localStorage.setItem('techcore_user_id', docId);
+                            localStorage.setItem('techcore_user_name', u.name);
+                            document.getElementById('userAccountLabel').innerText = u.name.split(' ')[0];
+                            alert(`Welcome back, ${u.name}!`);
+                            closeLoginModal();
+                        } else {
+                            alert("Invalid Credentials! Click 'Register' if you are a new customer.");
+                        }
+                    });
+                }
+            });
+        }
+
+        // ================= 5. FILE UPLOAD & SUBMISSIONS =================
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const maxSizeBytes = 5 * 1024 * 1024; // 5 MB Limit
+
+            if (file) {
+                if (file.size > maxSizeBytes) {
+                    alert("⚠️ File size exceeds 5 MB limit! (Your file: " + (file.size / (1024 * 1024)).toFixed(2) + " MB)\nPlease select a file under 5 MB.");
+                    event.target.value = "";
+                    uploadedFileName = "";
+                    uploadedBase64Data = "";
+                    document.getElementById('fileSelectedName').innerText = "";
+                    return;
+                }
+
+                uploadedFileName = file.name;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedBase64Data = e.target.result;
+                    const sizeStr = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+                    document.getElementById('fileSelectedName').innerText = "Selected: " + file.name + " (" + sizeStr + ") ✅";
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function uploadToGoogleDrive(fileBase64, fileName) {
+            if (!fileBase64) return "";
+            try {
+                const response = await fetch(GOOGLE_DRIVE_API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ fileData: fileBase64, fileName: fileName })
+                });
+                const result = await response.json();
+                return result.fileUrl || "";
+            } catch (err) {
+                return "";
+            }
+        }
+
+        async function saveToFirebase(type, name, phone, location, email, equipment, remarks, fileData, fileName, showAlert = false) {
+            let finalFileURL = "";
+            if (fileData) {
+                const btn = document.getElementById('amcSubmitBtn');
+                if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading to Drive...';
+                finalFileURL = await uploadToGoogleDrive(fileData, fileName);
+                if(btn) btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit';
+            }
+
+            db.collection("submissions").add({
+                type: type,
+                name: name,
+                phone: phone,
+                location: location || 'N/A',
+                email: email || '',
+                equipment: equipment,
+                remarks: remarks || '',
+                file: finalFileURL || fileData || '',
+                fileName: fileName || '',
+                status: 'Pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                if(showAlert) {
+                    alert("Thank you! Your inquiry has been submitted successfully.");
+                }
+            }).catch((error) => {
+                console.error("Firebase Error: ", error);
+            });
+        }
+
+        function submitInquiryOnly() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const location = document.getElementById('location').value;
+            const message = document.getElementById('message').value || "N/A";
+            const checkboxes = document.querySelectorAll('input[name="equipment"]:checked');
+            let equipment = Array.from(checkboxes).map(c => c.value).join(', ') || 'General Inquiry';
+
+            if(!name || !phone) { alert("Please fill Name and Phone"); return; }
+            logCustomerSearchRequirement(equipment);
+            saveToFirebase('Inquiry', name, phone, location, '', equipment, message, '', '', true);
+        }
+
+        function submitQuoteOnly() {
+            const name = document.getElementById('modalName').value;
+            const phone = document.getElementById('modalPhone').value;
+            const email = document.getElementById('modalEmail').value || "";
+            const location = document.getElementById('modalLocation').value || "Delhi NCR";
+            const checkboxes = document.querySelectorAll('input[name="modalEquipment"]:checked');
+            let equipment = Array.from(checkboxes).map(c => c.value).join(', ') || 'Quick Quote';
+
+            if(!name || !phone) { alert("Please fill Name and Phone"); return; }
+            logCustomerSearchRequirement(equipment);
+            saveToFirebase('Quick Quote', name, phone, location, email, equipment, '', '', '', true);
+            closeModal();
+        }
+
+        async function submitAmcOnly() {
+            const name = document.getElementById('amcName').value;
+            const phone = document.getElementById('amcPhone').value;
+            const location = document.getElementById('amcLocation').value;
+            const email = document.getElementById('amcEmail').value || "";
+            const checkboxes = document.querySelectorAll('input[name="amcEquipment"]:checked');
+            let equipment = Array.from(checkboxes).map(c => c.value).join(', ') || 'AMC Equipment Coverage';
+            const remarks = document.getElementById('amcManualDetails').value || "N/A";
+
+            if(!name || !phone) { alert("Please fill Name and Phone Number."); return; }
+
+            const btn = document.getElementById('amcSubmitBtn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+
+            await saveToFirebase('AMC Request', name, phone, location, email, equipment, remarks, uploadedBase64Data, uploadedFileName, true);
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit';
+            closeAmcModal();
+        }
+
+        function openModal() { document.getElementById('quoteModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('quoteModal').style.display = 'none'; }
+        function openAmcModal() { document.getElementById('amcModal').style.display = 'flex'; }
+        function closeAmcModal() { document.getElementById('amcModal').style.display = 'none'; }
+
+        window.onclick = function(event) {
+            if (event.target === document.getElementById('quoteModal')) closeModal();
+            if (event.target === document.getElementById('amcModal')) closeAmcModal();
+            if (event.target === document.getElementById('loginModal')) closeLoginModal();
+        }
+
+        function getSelectedEquipment() {
+            const checkboxes = document.querySelectorAll('input[name="equipment"]:checked');
+            let selected = [];
+            checkboxes.forEach((cb) => selected.push(cb.value));
+            return selected.length > 0 ? selected.join(', ') : 'None Selected';
+        }
+
+        function sendInquiryToWhatsApp() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const location = document.getElementById('location').value;
+            const equipment = getSelectedEquipment();
+            const message = document.getElementById('message').value || "N/A";
+
+            if(!name || !phone || !location) { alert("Please fill in Name, Phone, and Location."); return; }
+            saveToFirebase('Inquiry', name, phone, location, '', equipment, message, '', '');
+
+            const waText = `*New IT Equipment & Service Inquiry*%0A%0A` +
+                           `👤 *Name:* ${encodeURIComponent(name)}%0A` +
+                           `📞 *Phone:* ${encodeURIComponent(phone)}%0A` +
+                           `📍 *Location:* ${encodeURIComponent(location)}%0A` +
+                           `🛒 *Selected Items/Services:* ${encodeURIComponent(equipment)}%0A` +
+                           `📝 *Remarks:* ${encodeURIComponent(message)}`;
+
+            window.open(`https://wa.me/91${targetSMSNumber}?text=${waText}`, '_blank');
+        }
+
+        function sendDirectEmail() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const location = document.getElementById('location').value;
+            const equipment = getSelectedEquipment();
+            const message = document.getElementById('message').value || "N/A";
+
+            if(!name || !phone || !location) { alert("Please fill in Name, Phone, and Location."); return; }
+            saveToFirebase('Inquiry', name, phone, location, '', equipment, message, '', '');
+
+            const subject = `Inquiry from ${name} - TechCore IT Solutions`;
+            const mailBody = `Hello TechCore Team,\n\nI would like to inquire about the following IT Equipment/Services:\n\n` +
+                             `Name: ${name}\nPhone: ${phone}\nLocation: ${location}\nSelected IT Items: ${equipment}\nRemarks: ${message}`;
+
+            window.location.href = `mailto:${targetEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailBody)}`;
+        }
+
+        function sendDirectSMS() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const location = document.getElementById('location').value;
+            const equipment = getSelectedEquipment();
+            const message = document.getElementById('message').value || "N/A";
+
+            if(!name || !phone || !location) { alert("Please fill in Name, Phone, and Location."); return; }
+            saveToFirebase('Inquiry', name, phone, location, '', equipment, message, '', '');
+
+            const smsText = `IT Inquiry - Name:${name}, Phone:${phone}, Loc:${location}, Items:${equipment}, Msg:${message}`;
+            window.location.href = `sms:+91${targetSMSNumber}?body=${encodeURIComponent(smsText)}`;
+        }
+
+        function sendQuoteToWhatsApp() {
+            const name = document.getElementById('modalName').value;
+            const phone = document.getElementById('modalPhone').value;
+            const email = document.getElementById('modalEmail').value || "";
+            const location = document.getElementById('modalLocation').value || "";
+            const checkboxes = document.querySelectorAll('input[name="modalEquipment"]:checked');
+            let equipment = Array.from(checkboxes).map(c => c.value).join(', ') || 'Quick Quote';
+
+            if(!name || !phone) { alert("Please fill in your Name and Phone Number."); return; }
+            saveToFirebase('Quick Quote', name, phone, location, email, equipment, '', '', '');
+
+            const waText = `*New Quick Quote Request*%0A%0A👤 *Name:* ${encodeURIComponent(name)}%0A📞 *Phone:* ${encodeURIComponent(phone)}%0A🛠️ *Selected Items:* ${encodeURIComponent(equipment)}`;
+            window.open(`https://wa.me/91${targetSMSNumber}?text=${waText}`, '_blank');
+            closeModal();
+        }
+
+        function sendQuoteEmail() {
+            const name = document.getElementById('modalName').value;
+            const phone = document.getElementById('modalPhone').value;
+            const email = document.getElementById('modalEmail').value || "";
+            const location = document.getElementById('modalLocation').value || "";
+            const checkboxes = document.querySelectorAll('input[name="modalEquipment"]:checked');
+            let equipment = Array.from(checkboxes).map(c => c.value).join(', ') || 'Quick Quote';
+
+            if(!name || !phone) { alert("Please fill in your Name and Phone Number."); return; }
+            saveToFirebase('Quick Quote', name, phone, location, email, equipment, '', '', '');
+
+            const subject = `Quick Quote Request - ${name}`;
+            const mailBody = `Quick Quote Request:\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nItems: ${equipment}`;
+            window.location.href = `mailto:${targetEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailBody)}`;
+            closeModal();
+        }
+
+        function sendQuoteSMS() {
+            const name = document.getElementById('modalName').value;
+            const phone = document.getElementById('modalPhone').value;
+            const checkboxes = document.querySelectorAll('input[name="modalEquipment"]:checked');
+            let equipment = Array.from(checkboxes).map(c => c.value).join(', ') || 'Quick Quote';
+
+            if(!name || !phone) { alert("Please fill in your Name and Phone Number."); return; }
+            saveToFirebase('Quick Quote', name, phone, '', '', equipment, '', '', '');
+
+            const smsText = `Quick Quote - Name:${name}, Phone:${phone}, Items:${equipment}`;
+            window.location.href = `sms:+91${targetSMSNumber}?body=${encodeURIComponent(smsText)}`;
+            closeModal();
+        }
+
+        async function sendAmcToWhatsApp() {
+            const name = document.getElementById('amcName').value;
+            const phone = document.getElementById('amcPhone').value;
+            const location = document.getElementById('amcLocation').value;
+            const manualDetails = document.getElementById('amcManualDetails').value || "N/A";
+            const fileInfo = uploadedFileName ? uploadedFileName : "No File Uploaded";
+
+            if(!name || !phone) { alert("Please fill in your Name and Phone Number."); return; }
+            await saveToFirebase('AMC Request', name, phone, location, '', 'AMC Equipment', manualDetails, uploadedBase64Data, uploadedFileName);
+
+            const waText = `*New AMC Request*%0A%0A👤 *Name:* ${encodeURIComponent(name)}%0A📞 *Phone:* ${encodeURIComponent(phone)}%0A📝 *Details:* ${encodeURIComponent(manualDetails)}%0A📎 *File:* ${encodeURIComponent(fileInfo)}`;
+            window.open(`https://wa.me/91${targetSMSNumber}?text=${waText}`, '_blank');
+            closeAmcModal();
+        }
+
+        async function sendAmcEmail() {
+            const name = document.getElementById('amcName').value;
+            const phone = document.getElementById('amcPhone').value;
+            const location = document.getElementById('amcLocation').value;
+            const manualDetails = document.getElementById('amcManualDetails').value || "N/A";
+            const fileInfo = uploadedFileName ? uploadedFileName : "No File Uploaded";
+
+            if(!name || !phone) { alert("Please fill in your Name and Phone Number."); return; }
+            await saveToFirebase('AMC Request', name, phone, location, '', 'AMC Equipment', manualDetails, uploadedBase64Data, uploadedFileName);
+
+            const subject = `AMC Request - ${name}`;
+            const mailBody = `AMC Request Details:\n\nName: ${name}\nPhone: ${phone}\nDetails: ${manualDetails}\nFile: ${fileInfo}`;
+            window.location.href = `mailto:${targetEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(mailBody)}`;
+            closeAmcModal();
+        }
+
+        async function sendAmcSMS() {
+            const name = document.getElementById('amcName').value;
+            const phone = document.getElementById('amcPhone').value;
+            const manualDetails = document.getElementById('amcManualDetails').value || "N/A";
+            const fileInfo = uploadedFileName ? uploadedFileName : "None";
+
+            if(!name || !phone) { alert("Please fill in your Name and Phone Number."); return; }
+            await saveToFirebase('AMC Request', name, phone, '', '', 'AMC Equipment', manualDetails, uploadedBase64Data, uploadedFileName);
+
+            const smsText = `AMC Request - Name:${name}, Phone:${phone}, Details:${manualDetails}, File:${fileInfo}`;
+            window.location.href = `sms:+91${targetSMSNumber}?body=${encodeURIComponent(smsText)}`;
+            closeAmcModal();
+        }
+    </script>
+</body>
+</html>
