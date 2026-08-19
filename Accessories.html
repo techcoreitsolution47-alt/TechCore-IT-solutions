@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechCore IT SOLUTIONS - Accessories & Orders</title>
+
+  <!-- Firebase SDK (Firestore Database) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --tech-blue: #0b4c8c;
+      --tech-blue-dark: #073563;
+      --tech-buy-now: #1e3a8a;
+      --tech-red: #d32027;
+      --border-color: #e5e7eb;
+      --bg-light: #f8f9fa;
+      --text-dark: #111827;
+      --text-muted: #6b7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-light); color: var(--text-dark); line-height: 1.5; }
+
+    /* Announcement Bar */
+    .announcement-bar {
+      background-color: #0b1523; color: #f1f5f9; font-size: 12px; padding: 8px 20px; text-align: center; letter-spacing: 0.5px; overflow: hidden; white-space: nowrap;
+    }
+    .announcement-bar span { margin: 0 15px; opacity: 0.9; }
+
+    /* Header */
+    header {
+      background: #ffffff; border-bottom: 1px solid var(--border-color); box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 40;
+    }
+
+    .nav-container {
+      max-width: 1350px; margin: 0 auto; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    }
+
+    .brand-logo-img { height: 65px; width: auto; max-width: 280px; object-fit: contain; display: block; transition: all 0.3s ease; }
+    .brand-logo-img:hover { transform: scale(1.03); }
+
+    .search-box {
+      flex: 1; max-width: 460px; display: flex; border: 1.5px solid #d1d5db; border-radius: 8px; overflow: hidden; background: #fff;
+    }
+    .search-box input { flex: 1; border: none; padding: 10px 16px; font-size: 14px; outline: none; }
+    .search-box button { background: var(--tech-blue); color: white; border: none; padding: 0 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+
+    .btn-user-action {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 6px; background: #f8fafc; border: 1px solid #cbd5e1; font-size: 0.85rem; font-weight: 600; color: var(--text-dark); cursor: pointer; transition: 0.2s;
+    }
+    .btn-user-action:hover { background: #e2e8f0; color: var(--tech-blue); border-color: var(--tech-blue); }
+
+    .cart-btn {
+      background: none; border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    }
+    .cart-badge { background: var(--tech-red); color: white; font-size: 11px; padding: 2px 7px; border-radius: 10px; }
+
+    /* Breadcrumbs */
+    .breadcrumb-bar { max-width: 1350px; margin: 16px auto 0; padding: 0 24px; font-size: 13px; color: var(--text-muted); }
+    .breadcrumb-bar a { color: var(--text-muted); text-decoration: none; }
+
+    /* View Visibility Controls */
+    #catalogView { display: block; }
+    #productDetailView { display: none; }
+    #cartDetailView { display: none; }
+    #myOrdersView { display: none; }
+
+    .page-controls { max-width: 1350px; margin: 14px auto 20px; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; }
+    .page-title-box h1 { font-size: 24px; font-weight: 700; color: #111827; }
+    .sort-select { padding: 8px 14px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 13.5px; background: white; outline: none; cursor: pointer; }
+
+    .layout-wrapper { max-width: 1350px; margin: 0 auto 60px; padding: 0 24px; display: grid; grid-template-columns: 260px 1fr; gap: 28px; align-items: start; }
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+    .filter-card { background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; }
+    .filter-card-header { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+    .filter-sub { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .filter-sub a { color: var(--tech-blue); text-decoration: underline; cursor: pointer; }
+    .filter-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .filter-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151; cursor: pointer; }
+    .filter-item input { accent-color: var(--tech-blue); cursor: pointer; }
+
+    .price-range-inputs { display: flex; align-items: center; gap: 8px; }
+    .price-range-inputs input { width: 100%; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+
+    /* Product Grid */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+    .product-card {
+      background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s, box-shadow 0.15s; cursor: pointer;
+    }
+    .product-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); }
+
+    .img-box {
+      width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; background: #fbfbfb; border-radius: 6px; margin-bottom: 10px; overflow: hidden;
+    }
+    .img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+    .prod-category { font-size: 11px; color: #9ca3af; text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
+    .prod-title { font-size: 13.5px; font-weight: 600; color: #111827; line-height: 1.35; margin-bottom: 6px; min-height: 38px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .prod-price { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+
+    .stock-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; margin-bottom: 12px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot.in-stock { background: #2563eb; }
+    .dot.out-stock { background: #6b7280; }
+    .dot.low-stock { background: #ef4444; }
+
+    .btn-buy { width: 100%; padding: 9px 0; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; text-align: center; }
+    .btn-buy.active { background: var(--tech-blue); color: #fff; }
+    .btn-buy.active:hover { background: var(--tech-blue-dark); }
+    .btn-buy.disabled { background: #93c5fd; color: #ffffff; cursor: not-allowed; }
+
+    /* Product Sub-Page */
+    .detail-container { max-width: 1200px; margin: 25px auto 80px; padding: 0 24px; }
+    .btn-back-nav {
+      display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; color: #334155; cursor: pointer; margin-bottom: 25px; transition: 0.2s;
+    }
+    .btn-back-nav:hover { background: #f1f5f9; color: var(--tech-blue); }
+
+    .product-detail-wrapper {
+      display: grid; grid-template-columns: 1.1fr 1fr; gap: 50px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    .detail-gallery-section { display: flex; flex-direction: column; gap: 15px; }
+    .detail-main-img-box {
+      width: 100%; height: 440px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafafa; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: zoom-in; position: relative;
+    }
+    .detail-main-img-box img { max-width: 90%; max-height: 90%; object-fit: contain; transition: transform 0.3s ease; }
+    .detail-zoom-btn {
+      position: absolute; bottom: 12px; right: 12px; background: rgba(15,23,42,0.75); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; pointer-events: none; display: flex; align-items: center; gap: 6px;
+    }
+
+    .detail-thumbnails-row { display: flex; gap: 10px; overflow-x: auto; padding: 4px 0; }
+    .detail-thumb-item {
+      width: 70px; height: 70px; border: 2px solid #cbd5e1; border-radius: 8px; object-fit: contain; cursor: pointer; background: #fff; padding: 4px; transition: 0.2s; flex-shrink: 0;
+    }
+    .detail-thumb-item.active { border-color: var(--tech-blue); }
+
+    .detail-info-section { display: flex; flex-direction: column; justify-content: flex-start; }
+    .detail-title { font-size: 24px; font-weight: 700; color: #111827; line-height: 1.3; margin-bottom: 6px; }
+    .detail-sku { font-size: 12px; font-weight: 600; color: #64748b; letter-spacing: 0.5px; margin-bottom: 18px; }
+    .detail-price { font-size: 30px; font-weight: 800; color: #0f172a; display: block; line-height: 1.1; }
+    .detail-gst-tag { font-size: 12px; color: #64748b; margin-top: 4px; display: block; }
+    .detail-stock-indicator { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #2563eb; margin-bottom: 22px; }
+
+    .action-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .qty-selector {
+      display: inline-flex; align-items: center; border: 1.5px solid #cbd5e1; border-radius: 6px; background: #f8fafc; overflow: hidden; width: 120px;
+    }
+    .qty-btn {
+      width: 38px; height: 46px; background: transparent; border: none; font-size: 18px; font-weight: 700; cursor: pointer; color: #334155;
+    }
+    .qty-btn:hover { background: #e2e8f0; }
+    .qty-input { flex: 1; border: none; background: transparent; text-align: center; font-size: 15px; font-weight: 700; outline: none; width: 100%; }
+
+    .btn-add-cart-detail {
+      flex: 1; background: #243547; color: #ffffff; border: none; border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; padding: 12px; transition: 0.2s;
+    }
+    .btn-add-cart-detail:hover { background: #18222d; }
+    .btn-buy-now-detail {
+      width: 100%; background: #2563eb; color: #ffffff; border: none; border-radius: 6px; font-size: 15px; font-weight: 700; cursor: pointer; padding: 14px; margin-bottom: 30px; transition: 0.2s; text-align: center;
+    }
+    .btn-buy-now-detail:hover { background: #1d4ed8; }
+
+    .trust-badges-list {
+      list-style: none; border-top: 1px solid #e2e8f0; padding-top: 20px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .trust-badge-item { display: flex; align-items: center; gap: 12px; font-size: 13.5px; font-weight: 600; color: #334155; }
+    .trust-badge-item i { font-size: 18px; color: #1e293b; width: 24px; text-align: center; }
+
+    /* Cart & Checkout Page */
+    .cart-page-wrapper { max-width: 1200px; margin: 25px auto 80px; padding: 0 24px; }
+    .cart-grid-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; align-items: start; }
+    .cart-items-card, .checkout-card {
+      background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    }
+    .cart-card-header {
+      font-size: 18px; font-weight: 700; color: #111827; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .cart-item-row {
+      display: flex; gap: 15px; align-items: center; padding: 14px 0; border-bottom: 1px solid #f1f5f9;
+    }
+    .cart-item-img {
+      width: 70px; height: 70px; border-radius: 6px; object-fit: contain; background: #fafafa; border: 1px solid #e2e8f0; flex-shrink: 0;
+    }
+    .cart-item-info { flex: 1; }
+    .cart-item-title { font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 4px; }
+    .cart-item-price { font-size: 14px; font-weight: 700; color: var(--tech-blue); }
+    .cart-item-controls { display: flex; align-items: center; gap: 15px; margin-top: 6px; }
+    .cart-delete-btn { color: #ef4444; background: none; border: none; cursor: pointer; font-size: 14px; }
+    .cart-delete-btn:hover { text-decoration: underline; }
+
+    .price-summary-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; color: #475569; }
+    .price-total-row {
+      display: flex; justify-content: space-between; font-size: 18px; font-weight: 800; color: #111827; border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 14px;
+    }
+
+    .form-group-cust { margin-bottom: 14px; }
+    .form-group-cust label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 5px; }
+    .form-group-cust input, .form-group-cust textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;
+    }
+    .form-group-cust input:focus, .form-group-cust textarea:focus { border-color: var(--tech-blue); }
+
+    .btn-place-order {
+      width: 100%; background: #16a34a; color: #fff; padding: 14px; border: none; border-radius: 6px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px;
+    }
+    .btn-place-order:hover { background: #15803d; }
+
+    /* ================= MY ORDERS CARD (PRIVATE TO CUSTOMER) ================= */
+    .orders-page-wrapper { max-width: 1000px; margin: 25px auto 80px; padding: 0 24px; }
+    .orders-card {
+      background: #ffffff; border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    }
+    .order-item-box {
+      border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 15px; background: #fbfbfb;
+    }
+    .order-item-header {
+      display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 10px; font-size: 13px; color: #64748b;
+    }
+    .badge-status {
+      padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    }
+    .badge-status.Pending { background: #fef3c7; color: #b45309; }
+    .badge-status.Contacted { background: #e0f2fe; color: #0369a1; }
+    .badge-status.Completed { background: #d1fae5; color: #047857; }
+
+    /* Modals & Lightbox */
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 20000; justify-content: center; align-items: center; padding: 20px;
+    }
+    .modal-content {
+      background: #fff; padding: 25px 30px; border-radius: 12px; max-width: 440px; width: 100%; position: relative;
+    }
+    .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; }
+    .auth-tab-buttons { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; gap: 10px; }
+    .auth-tab-btn {
+      flex: 1; padding: 10px 0; background: transparent; border: none; font-size: 0.95rem; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px;
+    }
+    .auth-tab-btn.active { color: var(--tech-blue); border-bottom-color: var(--tech-blue); }
+
+    .lightbox-modal {
+      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); z-index: 99999; justify-content: center; align-items: center; padding: 20px;
+    }
+    .lightbox-modal.active { display: flex; }
+    .lightbox-content {
+      max-width: 900px; width: 100%; max-height: 92vh; background: #fff; border-radius: 12px; overflow: hidden; position: relative; display: flex; flex-direction: column;
+    }
+    .lightbox-header {
+      display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;
+    }
+    .lightbox-close { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #64748b; }
+    .lightbox-main-img-container {
+      width: 100%; height: 500px; display: flex; align-items: center; justify-content: center; background: #fafafa; padding: 20px; position: relative;
+    }
+    .lightbox-main-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .lightbox-nav-btn {
+      position: absolute; top: 50%; transform: translateY(-50%); background: rgba(15, 23, 42, 0.7); color: #fff; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    }
+    .lightbox-prev { left: 15px; }
+    .lightbox-next { right: 15px; }
+
+    @media (max-width: 860px) {
+      .layout-wrapper, .cart-grid-layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .product-detail-wrapper { grid-template-columns: 1fr; gap: 30px; padding: 20px; }
+      .detail-main-img-box { height: 300px; }
+      .lightbox-main-img-container { height: 320px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Announcement -->
+  <div class="announcement-bar">
+    <span>🚚 COD Above ₹200</span>
+    <span>•</span>
+    <span>🎉 Get 5% Discount On First Order</span>
+    <span>•</span>
+    <span>⚡ Free Shipping on orders above Rs. 1000</span>
+  </div>
+
+  <!-- Header Navigation -->
+  <header>
+    <div class="nav-container">
+      <a href="index.html" title="TechCore IT Solutions">
+        <img src="logo.png" alt="TechCore IT Solutions" class="brand-logo-img" onerror="this.onerror=null; this.src='logo_2.png';" />
+      </a>
+      
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search IT Accessories, splitters, cables, converters..." oninput="applyFiltersAndSort()" />
+        <button type="button"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Private Customer Orders Button -->
+        <button type="button" class="btn-user-action" id="btnNavOrders" onclick="openMyOrdersView()" style="display: none;">
+          <i class="fa-solid fa-box"></i> My Orders
+        </button>
+
+        <!-- Customer Login / Profile Button -->
+        <button type="button" class="btn-user-action" id="btnNavLogin" onclick="handleAuthClick()">
+          <i class="fa-solid fa-user"></i>
+          <span id="userAccountLabel">Login</span>
+        </button>
+
+        <!-- Cart Button -->
+        <button class="cart-btn" onclick="openCartView()">
+          🛒 Cart <span class="cart-badge" id="cartCount">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= VIEW 1: CATALOG VIEW ================= -->
+  <div id="catalogView">
+    <div class="breadcrumb-bar">
+      <a href="index.html">Home</a> &gt; <span>IT Accessories Store</span>
+    </div>
+
+    <div class="page-controls">
+      <div class="page-title-box">
+        <h1>IT Accessories Collection</h1>
+        <p id="totalCountDisplay">0 products available</p>
+      </div>
+
+      <div>
+        <select class="sort-select" id="sortSelect" onchange="applyFiltersAndSort()">
+          <option value="newest">Newest First</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="layout-wrapper">
+      <aside class="sidebar">
+        <div class="filter-card">
+          <div class="filter-card-header"><span>Compatible Brand</span></div>
+          <div class="filter-sub"><span id="brandSelectedCount">0 selected</span><a onclick="resetBrandFilters()">Reset</a></div>
+          <ul class="filter-list">
+            <li class="filter-item"><input type="checkbox" value="Multi-Brand" onchange="applyFiltersAndSort()" class="brand-check" /> Multi-Brand</li>
+            <li class="filter-item"><input type="checkbox" value="Apple" onchange="applyFiltersAndSort()" class="brand-check" /> Apple</li>
+            <li class="filter-item"><input type="checkbox" value="TVS" onchange="applyFiltersAndSort()" class="brand-check" /> TVS</li>
+            <li class="filter-item"><input type="checkbox" value="Others" onchange="applyFiltersAndSort()" class="brand-check" /> Others</li>
+          </ul>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-card-header"><span>Subcategories</span></div>
+          <div class="filter-sub"><span id="catSelectedCount">0 selected</span><a onclick="resetCategoryFilters()">Reset</a></div>
+          <ul class="filter-list">
+            <li class="filter-item"><input type="checkbox" value="USB Hub / Dongle" onchange="applyFiltersAndSort()" class="cat-check" /> USB Hub / Dongle</li>
+            <li class="filter-item"><input type="checkbox" value="Converter" onchange="applyFiltersAndSort()" class="cat-check" /> Converter</li>
+            <li class="filter-item"><input type="checkbox" value="HDD & SATA Case" onchange="applyFiltersAndSort()" class="cat-check" /> HDD & SATA Case</li>
+            <li class="filter-item"><input type="checkbox" value="CPU Fan" onchange="applyFiltersAndSort()" class="cat-check" /> CPU Fan</li>
+            <li class="filter-item"><input type="checkbox" value="Splitters & Extenders" onchange="applyFiltersAndSort()" class="cat-check" /> Splitters & Extenders</li>
+          </ul>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-card-header"><span>Price (₹)</span></div>
+          <div class="price-range-inputs">
+            <input type="number" id="minPrice" placeholder="Min ₹" oninput="applyFiltersAndSort()" />
+            <span>-</span>
+            <input type="number" id="maxPrice" placeholder="Max ₹" oninput="applyFiltersAndSort()" />
+          </div>
+        </div>
+      </aside>
+
+      <main>
+        <div class="product-grid" id="productGrid">
+          <div class="empty-state"><h3>Loading accessories...</h3></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ================= VIEW 2: DYNAMIC PRODUCT SUB-PAGE DETAIL ================= -->
+  <div id="productDetailView">
+    <div class="detail-container">
+      <button type="button" class="btn-back-nav" onclick="showCatalogView()">
+        <i class="fa-solid fa-arrow-left"></i> Back to Accessories Collection
+      </button>
+
+      <div class="product-detail-wrapper">
+        <div class="detail-gallery-section">
+          <div class="detail-main-img-box" onclick="openFullScreenImageModal()" title="Click to view full screen photo">
+            <img id="detailMainImg" src="" alt="Product Detail">
+            <div class="detail-zoom-btn"><i class="fa-solid fa-expand"></i> Click to Zoom Full View</div>
+          </div>
+          <div class="detail-thumbnails-row" id="detailThumbnailsRow"></div>
+        </div>
+
+        <div class="detail-info-section">
+          <h1 class="detail-title" id="detailTitle">Product Name</h1>
+          <div class="detail-sku" id="detailSku">SKU: TC-ITEM-001</div>
+
+          <div class="detail-price-box">
+            <span class="detail-price" id="detailPrice">₹ 0.00</span>
+            <span class="detail-gst-tag">Inclusive GST</span>
+          </div>
+
+          <div class="detail-stock-indicator" id="detailStockStatus">
+            <span class="dot in-stock"></span>
+            <span id="detailStockText">In stock and ready to ship</span>
+          </div>
+
+          <div class="action-row">
+            <div class="qty-selector">
+              <button type="button" class="qty-btn" onclick="adjustDetailQty(-1)">−</button>
+              <input type="number" id="detailQtyInput" class="qty-input" value="1" min="1" readonly>
+              <button type="button" class="qty-btn" onclick="adjustDetailQty(1)">+</button>
+            </div>
+            <button type="button" class="btn-add-cart-detail" onclick="addCurrentProductToCart()">
+              Add to cart
+            </button>
+          </div>
+
+          <button type="button" class="btn-buy-now-detail" onclick="buyNowCurrentProduct()">
+            Buy It Now
+          </button>
+
+          <ul class="trust-badges-list">
+            <li class="trust-badge-item"><i class="fa-solid fa-truck-fast"></i><span>Free Shipping on Orders Above ₹1,000</span></li>
+            <li class="trust-badge-item"><i class="fa-solid fa-money-bill-transfer"></i><span>COD Above ₹200</span></li>
+            <li class="trust-badge-item"><i class="fa-solid fa-box-open"></i><span>In stock and ready to ship</span></li>
+            <li class="trust-badge-item"><i class="fa-solid fa-shield-halved"></i><span>15 days Replacement guarantee</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIEW 3: CART & CHECKOUT PAGE ================= -->
+  <div id="cartDetailView">
+    <div class="cart-page-wrapper">
+      <button type="button" class="btn-back-nav" onclick="showCatalogView()">
+        <i class="fa-solid fa-arrow-left"></i> Continue Shopping
+      </button>
+
+      <div class="cart-grid-layout">
+        <div class="cart-items-card">
+          <div class="cart-card-header">
+            <span><i class="fa-solid fa-cart-shopping"></i> Your Shopping Cart</span>
+            <span id="cartItemsTotalCountTag" style="font-size: 13px; color: var(--text-muted);">0 Items</span>
+          </div>
+
+          <div id="cartItemsListContainer"></div>
+
+          <div class="price-summary-row" style="margin-top: 20px;">
+            <span>Subtotal:</span>
+            <span id="cartSubtotalText">₹ 0.00</span>
+          </div>
+          <div class="price-summary-row">
+            <span>Shipping:</span>
+            <span style="color: #16a34a; font-weight: 600;">FREE</span>
+          </div>
+          <div class="price-total-row">
+            <span>Total Payable:</span>
+            <span id="cartGrandTotalText">₹ 0.00</span>
+          </div>
+        </div>
+
+        <!-- Checkout Information Form -->
+        <div class="checkout-card">
+          <div class="cart-card-header">
+            <span><i class="fa-solid fa-location-dot"></i> Delivery Details</span>
+          </div>
+
+          <form id="checkoutCustomerForm" onsubmit="handlePlaceOrderSubmit(event)">
+            <div class="form-group-cust">
+              <label>Full Name *</label>
+              <input type="text" id="custName" required placeholder="Your Full Name">
+            </div>
+
+            <div class="form-group-cust">
+              <label>Mobile Number *</label>
+              <input type="tel" id="custPhone" required placeholder="10-digit mobile number" maxlength="10">
+            </div>
+
+            <div class="form-group-cust">
+              <label>Delivery Address *</label>
+              <textarea id="custAddress" rows="2" required placeholder="House / Flat No, Street, Landmark..."></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-group-cust">
+                <label>City *</label>
+                <input type="text" id="custCity" required placeholder="City">
+              </div>
+              <div class="form-group-cust">
+                <label>Pincode *</label>
+                <input type="text" id="custPincode" required placeholder="6-digit Pincode" maxlength="6">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-place-order" id="btnPlaceOrder">
+              <i class="fa-solid fa-bag-shopping"></i> Complete Order & Buy
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIEW 4: MY ORDERS (PRIVATE TO LOGGED IN CUSTOMER) ================= -->
+  <div id="myOrdersView">
+    <div class="orders-page-wrapper">
+      <button type="button" class="btn-back-nav" onclick="showCatalogView()">
+        <i class="fa-solid fa-arrow-left"></i> Back to Store
+      </button>
+
+      <div class="orders-card">
+        <div class="cart-card-header">
+          <span><i class="fa-solid fa-box"></i> My Orders & Purchase History</span>
+          <span id="myOrdersCountDisplay" style="font-size: 13px; color: var(--text-muted);">0 Orders</span>
+        </div>
+
+        <div id="myOrdersContainer">
+          <!-- Populated only with this customer's orders -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= USER AUTH MODAL ================= -->
+  <div class="modal" id="loginModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeLoginModal()">&times;</span>
+      <div class="auth-tab-buttons">
+        <button type="button" class="auth-tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login')">Login</button>
+        <button type="button" class="auth-tab-btn" id="tabBtnRegister" onclick="switchAuthTab('register')">Register</button>
+      </div>
+
+      <form id="userLoginForm" onsubmit="handleUserLogin(event)">
+        <div class="form-group-cust"><label>Phone Number or Email</label><input type="text" id="loginIdentifier" required placeholder="Mobile or Email"></div>
+        <div class="form-group-cust"><label>Password</label><input type="password" id="loginPassword" required placeholder="Password"></div>
+        <button type="submit" class="btn-add-cart-detail" style="width: 100%; margin-top: 10px;">Login</button>
+      </form>
+
+      <form id="userRegisterForm" style="display: none;" onsubmit="handleUserRegister(event)">
+        <div class="form-group-cust"><label>Full Name *</label><input type="text" id="regName" required placeholder="Your Name"></div>
+        <div class="form-group-cust"><label>Mobile Number *</label><input type="tel" id="regPhone" required placeholder="10-digit mobile"></div>
+        <div class="form-group-cust"><label>Email</label><input type="email" id="regEmail" placeholder="Email (optional)"></div>
+        <div class="form-group-cust"><label>Create Password *</label><input type="password" id="regPassword" required placeholder="Password"></div>
+        <button type="submit" class="btn-add-cart-detail" style="width: 100%; margin-top: 10px; background: #16a34a;">Create Account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= FULL VIEW LIGHTBOX ================= -->
+  <div class="lightbox-modal" id="lightboxModal">
+    <div class="lightbox-content">
+      <div class="lightbox-header">
+        <h3 id="lightboxTitle">Full Image Preview</h3>
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+      </div>
+      <div class="lightbox-main-img-container">
+        <button class="lightbox-nav-btn lightbox-prev" onclick="prevLightboxImage()"><i class="fa-solid fa-chevron-left"></i></button>
+        <img id="lightboxMainImg" class="lightbox-main-img" src="" alt="Full View">
+        <button class="lightbox-nav-btn lightbox-next" onclick="nextLightboxImage()"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let liveProducts = [];
+    let currentSelectedProduct = null;
+    let currentProductGallery = [];
+    let currentGalleryIndex = 0;
+
+    let cartItems = JSON.parse(localStorage.getItem('techcore_cart_items')) || [];
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBIF4lvtKMfCBcbWzWPvBSodBIU31rdQ0M",
+      authDomain: "techcore-it-solutions.firebaseapp.com",
+      projectId: "techcore-it-solutions",
+      storageBucket: "techcore-it-solutions.firebasestorage.app",
+      messagingSenderId: "467350961150",
+      appId: "1:467350961150:web:769bfc70f42d8a5b54deaf",
+      measurementId: "G-LHW74L17S7"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ================= 1. UNIVERSAL SESSION SYNC (INTERLINKED WITH INDEX.HTML) =================
+    function checkUserSession() {
+      const storedUserName = localStorage.getItem('techcore_user_name');
+      const storedUserPhone = localStorage.getItem('techcore_user_phone');
+
+      if (storedUserName) {
+        document.getElementById('userAccountLabel').innerText = storedUserName.split(' ')[0] + " (Logout)";
+        document.getElementById('btnNavOrders').style.display = 'inline-flex';
+        if (document.getElementById('custName')) document.getElementById('custName').value = storedUserName;
+        if (document.getElementById('custPhone') && storedUserPhone) document.getElementById('custPhone').value = storedUserPhone;
+      } else {
+        document.getElementById('userAccountLabel').innerText = "Login";
+        document.getElementById('btnNavOrders').style.display = 'none';
+      }
+    }
+
+    checkUserSession();
+    updateCartBadgeUI();
+
+    // Real-Time Products Listener
+    db.collection("accessories").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+      liveProducts = [];
+      snapshot.forEach((doc) => {
+        const item = doc.data();
+        const defaultImg = "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&q=80";
+        let imageList = (item.images && item.images.length > 0) ? item.images : [item.image || defaultImg];
+
+        liveProducts.push({
+          id: doc.id,
+          title: item.title,
+          price: item.price,
+          brand: item.brand || 'Multi-Brand',
+          category: item.category,
+          status: item.status,
+          stockText: item.stockText,
+          image: imageList[0],
+          images: imageList,
+          createdAt: item.createdAt ? item.createdAt.seconds : Date.now()
+        });
+      });
+
+      applyFiltersAndSort();
+      checkUrlRouting();
+    });
+
+    // ================= 2. CATALOG RENDER =================
+    function renderList(list) {
+      const grid = document.getElementById("productGrid");
+      const countEl = document.getElementById("totalCountDisplay");
+      grid.innerHTML = "";
+      countEl.innerText = `${list.length} products available`;
+
+      if (list.length === 0) {
+        grid.innerHTML = `<div class="empty-state"><h3>No products found.</h3></div>`;
+        return;
+      }
+
+      list.forEach((prod) => {
+        const isSoldOut = prod.status === "out-of-stock";
+        const dotClass = prod.status === "out-of-stock" ? "out-stock" : (prod.status === "low-stock" ? "low-stock" : "in-stock");
+
+        const card = document.createElement("div");
+        card.className = "product-card";
+        card.onclick = () => openProductSubPage(prod.id);
+        card.innerHTML = `
+          <div>
+            <div class="img-box">
+              <img src="${prod.image}" alt="${prod.title}" />
+            </div>
+            <div class="prod-category">${prod.category} • ${prod.brand}</div>
+            <div class="prod-title" title="${prod.title}">${prod.title}</div>
+            <div class="prod-price">₹ ${Number(prod.price).toFixed(2)}</div>
+            <div class="stock-badge">
+              <span class="dot ${dotClass}"></span>
+              <span>${prod.stockText || (isSoldOut ? 'Out of stock' : 'In stock')}</span>
+            </div>
+          </div>
+          <button class="btn-buy ${isSoldOut ? 'disabled' : 'active'}" 
+                  onclick="event.stopPropagation(); addItemToCart('${prod.id}', 1)" 
+                  ${isSoldOut ? 'disabled' : ''}>
+            ${isSoldOut ? 'Sold out' : 'Add to cart'}
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // ================= 3. SUB-PAGE DETAIL =================
+    function openProductSubPage(productId) {
+      const prod = liveProducts.find(p => p.id === productId);
+      if (!prod) return;
+
+      currentSelectedProduct = prod;
+      currentProductGallery = prod.images;
+      currentGalleryIndex = 0;
+
+      window.location.hash = `product-${productId}`;
+
+      document.getElementById('detailTitle').innerText = prod.title;
+      document.getElementById('detailSku').innerText = `SKU: TC-${prod.id.substring(0, 8).toUpperCase()}`;
+      document.getElementById('detailPrice').innerText = `₹ ${Number(prod.price).toFixed(2)}`;
+      document.getElementById('detailMainImg').src = currentProductGallery[0];
+      document.getElementById('detailQtyInput').value = 1;
+
+      const isSoldOut = prod.status === "out-of-stock";
+      const stockStatusEl = document.getElementById('detailStockStatus');
+      if (isSoldOut) {
+        stockStatusEl.innerHTML = '<span class="dot out-stock"></span><span>Out of Stock</span>';
+      } else {
+        stockStatusEl.innerHTML = `<span class="dot ${prod.status === 'low-stock' ? 'low-stock' : 'in-stock'}"></span><span>${prod.stockText || 'In stock and ready to ship'}</span>`;
+      }
+
+      const thumbRow = document.getElementById('detailThumbnailsRow');
+      thumbRow.innerHTML = '';
+      if (currentProductGallery.length > 1) {
+        currentProductGallery.forEach((imgUrl, idx) => {
+          const imgThumb = document.createElement('img');
+          imgThumb.src = imgUrl;
+          imgThumb.className = `detail-thumb-item ${idx === 0 ? 'active' : ''}`;
+          imgThumb.onclick = () => selectGalleryImage(idx);
+          thumbRow.appendChild(imgThumb);
+        });
+      }
+
+      document.getElementById('catalogView').style.display = 'none';
+      document.getElementById('cartDetailView').style.display = 'none';
+      document.getElementById('myOrdersView').style.display = 'none';
+      document.getElementById('productDetailView').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function selectGalleryImage(idx) {
+      currentGalleryIndex = idx;
+      document.getElementById('detailMainImg').src = currentProductGallery[idx];
+      document.querySelectorAll('.detail-thumb-item').forEach((el, i) => el.classList.toggle('active', i === idx));
+    }
+
+    function adjustDetailQty(amt) {
+      const qtyInput = document.getElementById('detailQtyInput');
+      let curr = parseInt(qtyInput.value) || 1;
+      curr += amt;
+      if (curr < 1) curr = 1;
+      qtyInput.value = curr;
+    }
+
+    function addCurrentProductToCart() {
+      if (!currentSelectedProduct) return;
+      const qty = parseInt(document.getElementById('detailQtyInput').value) || 1;
+      addItemToCart(currentSelectedProduct.id, qty);
+    }
+
+    function buyNowCurrentProduct() {
+      if (!currentSelectedProduct) return;
+      const qty = parseInt(document.getElementById('detailQtyInput').value) || 1;
+      addItemToCart(currentSelectedProduct.id, qty);
+      openCartView();
+    }
+
+    // ================= 4. CART & CALCULATION SYSTEM =================
+    function addItemToCart(productId, qty = 1) {
+      const prod = liveProducts.find(p => p.id === productId);
+      if (!prod) return;
+
+      const existingIndex = cartItems.findIndex(item => item.id === productId);
+      if (existingIndex > -1) {
+        cartItems[existingIndex].qty += qty;
+      } else {
+        cartItems.push({
+          id: prod.id,
+          title: prod.title,
+          price: Number(prod.price),
+          image: prod.image,
+          qty: qty
+        });
+      }
+
+      saveCartState();
+      alert(`✅ ${qty} x "${prod.title}" added to your cart!`);
+    }
+
+    function updateCartItemQty(productId, change) {
+      const item = cartItems.find(i => i.id === productId);
+      if (!item) return;
+
+      item.qty += change;
+      if (item.qty <= 0) {
+        removeCartItem(productId);
+        return;
+      }
+
+      saveCartState();
+      renderCartItemsUI();
+    }
+
+    function removeCartItem(productId) {
+      cartItems = cartItems.filter(i => i.id !== productId);
+      saveCartState();
+      renderCartItemsUI();
+    }
+
+    function saveCartState() {
+      localStorage.setItem('techcore_cart_items', JSON.stringify(cartItems));
+      updateCartBadgeUI();
+    }
+
+    function updateCartBadgeUI() {
+      const totalQty = cartItems.reduce((sum, item) => sum + item.qty, 0);
+      document.getElementById('cartCount').innerText = totalQty;
+    }
+
+    function openCartView() {
+      window.location.hash = 'cart';
+      document.getElementById('catalogView').style.display = 'none';
+      document.getElementById('productDetailView').style.display = 'none';
+      document.getElementById('myOrdersView').style.display = 'none';
+      document.getElementById('cartDetailView').style.display = 'block';
+      renderCartItemsUI();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderCartItemsUI() {
+      const container = document.getElementById('cartItemsListContainer');
+      container.innerHTML = '';
+
+      if (cartItems.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
+            <i class="fa-solid fa-cart-shopping" style="font-size: 3rem; margin-bottom: 10px;"></i>
+            <h3>Your Cart is Empty</h3>
+          </div>
+        `;
+        document.getElementById('cartSubtotalText').innerText = '₹ 0.00';
+        document.getElementById('cartGrandTotalText').innerText = '₹ 0.00';
+        document.getElementById('cartItemsTotalCountTag').innerText = '0 Items';
+        return;
+      }
+
+      let subtotal = 0;
+      let totalQty = 0;
+
+      cartItems.forEach(item => {
+        const itemTotal = item.price * item.qty;
+        subtotal += itemTotal;
+        totalQty += item.qty;
+
+        const row = document.createElement('div');
+        row.className = 'cart-item-row';
+        row.innerHTML = `
+          <img src="${item.image}" class="cart-item-img" alt="${item.title}">
+          <div class="cart-item-info">
+            <div class="cart-item-title">${item.title}</div>
+            <div class="cart-item-price">₹ ${item.price.toFixed(2)}</div>
+            <div class="cart-item-controls">
+              <div class="qty-selector" style="width: 100px; height: 32px;">
+                <button type="button" class="qty-btn" style="height: 32px;" onclick="updateCartItemQty('${item.id}', -1)">−</button>
+                <input type="number" class="qty-input" value="${item.qty}" readonly>
+                <button type="button" class="qty-btn" style="height: 32px;" onclick="updateCartItemQty('${item.id}', 1)">+</button>
+              </div>
+              <button type="button" class="cart-delete-btn" onclick="removeCartItem('${item.id}')">
+                <i class="fa-solid fa-trash-can"></i> Remove
+              </button>
+            </div>
+          </div>
+          <div style="font-weight: 700; font-size: 15px; color: #111827;">
+            ₹ ${itemTotal.toFixed(2)}
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      document.getElementById('cartItemsTotalCountTag').innerText = `${totalQty} Items`;
+      document.getElementById('cartSubtotalText').innerText = `₹ ${subtotal.toFixed(2)}`;
+      document.getElementById('cartGrandTotalText').innerText = `₹ ${subtotal.toFixed(2)}`;
+    }
+
+    // ================= 5. CHECKOUT & ORDER BINDING WITH CUSTOMER ID =================
+    async function handlePlaceOrderSubmit(e) {
+      e.preventDefault();
+      if (cartItems.length === 0) {
+        alert("Your cart is empty! Please add products before checking out.");
+        return;
+      }
+
+      const name = document.getElementById('custName').value.trim();
+      const phone = document.getElementById('custPhone').value.trim();
+      const address = document.getElementById('custAddress').value.trim();
+      const city = document.getElementById('custCity').value.trim();
+      const pincode = document.getElementById('custPincode').value.trim();
+
+      const customerId = localStorage.getItem('techcore_user_id') || ('GUEST_' + phone);
+      const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.qty), 0).toFixed(2);
+      const itemsSummary = cartItems.map(i => `${i.title} (Qty: ${i.qty})`).join(', ');
+
+      const btn = document.getElementById('btnPlaceOrder');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Placing Order...';
+      btn.disabled = true;
+
+      try {
+        await db.collection("submissions").add({
+          type: 'Purchase / Order',
+          userId: customerId, // Bound to customer account
+          name: name,
+          phone: phone,
+          location: `${city} - ${pincode}`,
+          address: address,
+          equipment: itemsSummary,
+          remarks: `Order Total: ₹${totalAmount} (COD/Order)`,
+          status: 'Pending',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        const waText = `*New Order Placed on TechCore*%0A%0A` +
+                       `👤 *Customer:* ${encodeURIComponent(name)}%0A` +
+                       `📞 *Phone:* ${encodeURIComponent(phone)}%0A` +
+                       `📍 *Delivery:* ${encodeURIComponent(address + ', ' + city + ' - ' + pincode)}%0A` +
+                       `🛒 *Items:* ${encodeURIComponent(itemsSummary)}%0A` +
+                       `💰 *Total:* ₹${totalAmount}`;
+
+        alert(`🎉 Thank you, ${name}! Your order of ₹${totalAmount} has been placed successfully.`);
+        
+        cartItems = [];
+        saveCartState();
+        renderCartItemsUI();
+
+        // Redirect to customer's own order history
+        openMyOrdersView();
+        window.open(`https://wa.me/918368784998?text=${waText}`, '_blank');
+      } catch (err) {
+        console.error(err);
+        alert("Failed to submit order.");
+      } finally {
+        btn.innerHTML = '<i class="fa-solid fa-bag-shopping"></i> Complete Order & Buy';
+        btn.disabled = false;
+      }
+    }
+
+    // ================= 6. PRIVATE "MY ORDERS" VIEW (CUSTOMER SPECIFIC) =================
+    function openMyOrdersView() {
+      const userPhone = localStorage.getItem('techcore_user_phone');
+      const userId = localStorage.getItem('techcore_user_id');
+
+      if (!userPhone && !userId) {
+        alert("Please login first to view your orders!");
+        openLoginModal('login');
+        return;
+      }
+
+      window.location.hash = 'my-orders';
+      document.getElementById('catalogView').style.display = 'none';
+      document.getElementById('productDetailView').style.display = 'none';
+      document.getElementById('cartDetailView').style.display = 'none';
+      document.getElementById('myOrdersView').style.display = 'block';
+
+      loadCustomerOrders(userPhone, userId);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function loadCustomerOrders(userPhone, userId) {
+      const container = document.getElementById('myOrdersContainer');
+      container.innerHTML = '<p style="text-align:center; padding: 20px; color:#64748b;">Loading your orders...</p>';
+
+      // Listen only for orders placed with this customer's Phone or UserID
+      db.collection("submissions")
+        .where("phone", "==", userPhone)
+        .orderBy("timestamp", "desc")
+        .onSnapshot((snapshot) => {
+          container.innerHTML = '';
+          document.getElementById('myOrdersCountDisplay').innerText = `${snapshot.size} Orders`;
+
+          if (snapshot.empty) {
+            container.innerHTML = `
+              <div style="text-align:center; padding: 40px 20px; color: #94a3b8;">
+                <i class="fa-solid fa-box-open" style="font-size: 2.5rem; margin-bottom: 8px;"></i>
+                <h4>You haven't placed any orders yet.</h4>
+              </div>
+            `;
+            return;
+          }
+
+          snapshot.forEach((doc) => {
+            const order = doc.data();
+            const dateStr = order.timestamp ? new Date(order.timestamp.seconds * 1000).toLocaleString() : 'Just Now';
+
+            const box = document.createElement('div');
+            box.className = 'order-item-box';
+            box.innerHTML = `
+              <div class="order-item-header">
+                <span><b>Order Date:</b> ${dateStr}</span>
+                <span class="badge-status ${order.status}">${order.status}</span>
+              </div>
+              <div style="font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 4px;">
+                📦 ${order.equipment}
+              </div>
+              <div style="font-size: 13px; color: #475569;">
+                <b>Delivery Address:</b> ${order.address || order.location || 'N/A'}<br>
+                <b>Payment Summary:</b> ${order.remarks}
+              </div>
+            `;
+            container.appendChild(box);
+          });
+        });
+    }
+
+    // ================= 7. UNIVERSAL AUTH & LOGIN HANDLERS =================
+    function handleAuthClick() {
+      if (localStorage.getItem('techcore_user_name')) {
+        if (confirm("Do you want to logout from your account?")) {
+          localStorage.removeItem('techcore_user_id');
+          localStorage.removeItem('techcore_user_name');
+          localStorage.removeItem('techcore_user_phone');
+          checkUserSession();
+          showCatalogView();
+        }
+      } else {
+        openLoginModal('login');
+      }
+    }
+
+    function openLoginModal(tab = 'login') { document.getElementById('loginModal').style.display = 'flex'; switchAuthTab(tab); }
+    function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+    function switchAuthTab(tab) {
+      document.getElementById('userLoginForm').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('userRegisterForm').style.display = tab === 'register' ? 'block' : 'none';
+      document.getElementById('tabBtnLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabBtnRegister').classList.toggle('active', tab === 'register');
+    }
+
+    function handleUserRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+
+      db.collection("users").add({
+        name, phone, email, password,
+        cart: cartItems, purchases: [], lastAction: 'Registered & Active',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(docRef => {
+        localStorage.setItem('techcore_user_id', docRef.id);
+        localStorage.setItem('techcore_user_name', name);
+        localStorage.setItem('techcore_user_phone', phone);
+        checkUserSession();
+        alert("Account registered successfully!");
+        closeLoginModal();
+      });
+    }
+
+    function handleUserLogin(e) {
+      e.preventDefault();
+      const iden = document.getElementById('loginIdentifier').value.trim();
+      const pass = document.getElementById('loginPassword').value;
+
+      db.collection("users").where("phone", "==", iden).where("password", "==", pass).get().then(snap => {
+        if(!snap.empty) {
+          const u = snap.docs[0].data();
+          const docId = snap.docs[0].id;
+          localStorage.setItem('techcore_user_id', docId);
+          localStorage.setItem('techcore_user_name', u.name);
+          localStorage.setItem('techcore_user_phone', u.phone);
+          checkUserSession();
+          alert(`Welcome back, ${u.name}!`);
+          closeLoginModal();
+        } else {
+          db.collection("users").where("email", "==", iden).where("password", "==", pass).get().then(emailSnap => {
+            if (!emailSnap.empty) {
+              const u = emailSnap.docs[0].data();
+              const docId = emailSnap.docs[0].id;
+              localStorage.setItem('techcore_user_id', docId);
+              localStorage.setItem('techcore_user_name', u.name);
+              localStorage.setItem('techcore_user_phone', u.phone);
+              checkUserSession();
+              alert(`Welcome back, ${u.name}!`);
+              closeLoginModal();
+            } else {
+              alert("Invalid Credentials! Click 'Register' if you are a new customer.");
+            }
+          });
+        }
+      });
+    }
+
+    // ================= 8. NAVIGATION & LIGHTBOX =================
+    function showCatalogView() {
+      window.location.hash = '';
+      document.getElementById('productDetailView').style.display = 'none';
+      document.getElementById('cartDetailView').style.display = 'none';
+      document.getElementById('myOrdersView').style.display = 'none';
+      document.getElementById('catalogView').style.display = 'block';
+    }
+
+    function checkUrlRouting() {
+      const hash = window.location.hash;
+      if (hash === '#cart') {
+        openCartView();
+      } else if (hash === '#my-orders') {
+        openMyOrdersView();
+      } else if (hash.startsWith('#product-')) {
+        const prodId = hash.replace('#product-', '');
+        if (liveProducts.length > 0) openProductSubPage(prodId);
+      } else {
+        showCatalogView();
+      }
+    }
+
+    window.addEventListener('hashchange', checkUrlRouting);
+
+    function openFullScreenImageModal() {
+      if (!currentProductGallery || currentProductGallery.length === 0) return;
+      document.getElementById('lightboxTitle').innerText = currentSelectedProduct ? currentSelectedProduct.title : "Full View";
+      document.getElementById('lightboxMainImg').src = currentProductGallery[currentGalleryIndex];
+      document.getElementById('lightboxModal').classList.add('active');
+    }
+
+    function nextLightboxImage() {
+      if (currentProductGallery.length <= 1) return;
+      currentGalleryIndex = (currentGalleryIndex + 1) % currentProductGallery.length;
+      document.getElementById('lightboxMainImg').src = currentProductGallery[currentGalleryIndex];
+      selectGalleryImage(currentGalleryIndex);
+    }
+
+    function prevLightboxImage() {
+      if (currentProductGallery.length <= 1) return;
+      currentGalleryIndex = (currentGalleryIndex - 1 + currentProductGallery.length) % currentProductGallery.length;
+      document.getElementById('lightboxMainImg').src = currentProductGallery[currentGalleryIndex];
+      selectGalleryImage(currentGalleryIndex);
+    }
+
+    function closeLightbox() { document.getElementById('lightboxModal').classList.remove('active'); }
+
+    function applyFiltersAndSort() {
+      const searchVal = document.getElementById("searchInput").value.toLowerCase().trim();
+      const minPrice = parseFloat(document.getElementById("minPrice").value) || 0;
+      const maxPrice = parseFloat(document.getElementById("maxPrice").value) || Infinity;
+
+      const selectedBrands = Array.from(document.querySelectorAll(".brand-check:checked")).map(el => el.value);
+      document.getElementById("brandSelectedCount").innerText = `${selectedBrands.length} selected`;
+
+      const selectedCats = Array.from(document.querySelectorAll(".cat-check:checked")).map(el => el.value);
+      document.getElementById("catSelectedCount").innerText = `${selectedCats.length} selected`;
+
+      let filtered = liveProducts.filter(p => {
+        const matchesSearch = p.title.toLowerCase().includes(searchVal) || p.category.toLowerCase().includes(searchVal);
+        const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(p.brand);
+        const matchesCat = selectedCats.length === 0 || selectedCats.includes(p.category);
+        const matchesPrice = p.price >= minPrice && p.price <= maxPrice;
+        return matchesSearch && matchesBrand && matchesCat && matchesPrice;
+      });
+
+      const sortVal = document.getElementById("sortSelect").value;
+      if (sortVal === "price-low") filtered.sort((a, b) => a.price - b.price);
+      else if (sortVal === "price-high") filtered.sort((a, b) => b.price - a.price);
+      else if (sortVal === "newest") filtered.sort((a, b) => b.createdAt - a.createdAt);
+
+      renderList(filtered);
+    }
+
+    function resetBrandFilters() {
+      document.querySelectorAll(".brand-check").forEach(c => c.checked = false);
+      applyFiltersAndSort();
+    }
+
+    function resetCategoryFilters() {
+      document.querySelectorAll(".cat-check").forEach(c => c.checked = false);
+      applyFiltersAndSort();
+    }
+  </script>
+</body>
+</html>
