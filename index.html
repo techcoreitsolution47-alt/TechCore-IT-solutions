@@ -1,0 +1,3046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechCore IT Solutions | Sales, Repair & CCTV Services</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#f8fafc">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="TechCore IT">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2885/2885417.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-light: #38bdf8;
+            --primary-dark: #0369a1;
+            --primary-glow: rgba(2, 132, 199, 0.2);
+            --accent: #059669;
+            --accent-light: #10b981;
+            --accent-glow: rgba(5, 150, 105, 0.18);
+            --background: #f5f7fb;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --surface-hover: #f0f9ff;
+            --border: #e2e8f0;
+            --border-light: #eef2f7;
+            --text-main: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --whatsapp-color: #25d366;
+            --sms-btn: #2563eb;
+            --email-btn: #dc2626;
+            --shadow-sm: 0 4px 15px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.12);
+            --transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background: var(--background);
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .ambient-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+            background: #f5f7fb;
+        }
+
+        .ambient-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.13;
+            animation: floatGlow 18s ease-in-out infinite alternate;
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #38bdf8, #bae6fd);
+        }
+
+        .blob-2 {
+            bottom: 20%;
+            right: -10%;
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, #10b981, #a7f3d0);
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            top: 45%;
+            left: 20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #6366f1, #c7d2fe);
+            animation-delay: -10s;
+        }
+
+        @keyframes floatGlow {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(60px, 40px) scale(1.1);
+            }
+
+            100% {
+                transform: translate(-40px, 80px) scale(0.95);
+            }
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font-family: inherit;
+        }
+
+        .top-bar {
+            background: #ffffff;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            padding: 8px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .top-bar-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .top-bar-info a {
+            color: var(--text-secondary);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .top-bar-info a:hover {
+            color: var(--primary);
+        }
+
+        .top-bar-info i,
+        .top-bar > div:last-child i {
+            color: var(--primary);
+            margin-right: 6px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: var(--transition);
+            box-shadow: 0 2px 15px rgba(15, 23, 42, 0.04);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 5%;
+            max-width: 1350px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+
+        .brand-logo-img {
+            height: 52px;
+            width: auto;
+            max-width: 250px;
+            object-fit: contain;
+            transition: var(--transition);
+            filter: drop-shadow(0 4px 8px rgba(2, 132, 199, 0.12));
+        }
+
+        .brand-logo-img:hover {
+            transform: scale(1.04);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+        }
+
+        .nav-links a {
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            position: relative;
+            padding-bottom: 4px;
+            cursor: pointer;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: var(--transition);
+            box-shadow: 0 0 8px var(--primary-light);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-right-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-location-btn,
+        .btn-user-login,
+        .nav-cart-btn {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: 9px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-location-btn:hover,
+        .btn-user-login:hover,
+        .nav-cart-btn:hover {
+            background: #f0f9ff;
+            border-color: #7dd3fc;
+            color: var(--primary-dark);
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.12);
+        }
+
+        .nav-cart-btn {
+            position: relative;
+            padding: 8px 12px;
+            font-size: 1rem;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 5px 18px rgba(2, 132, 199, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 9px 25px rgba(2, 132, 199, 0.32);
+        }
+
+        .btn-call {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 9px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 5px 18px rgba(5, 150, 105, 0.2);
+        }
+
+        .btn-call:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 9px 25px rgba(5, 150, 105, 0.28);
+        }
+
+        .btn-submit-db {
+            width: 100%;
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #fff;
+            padding: 14px;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 5px 18px rgba(5, 150, 105, 0.2);
+        }
+
+        .btn-submit-db:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(5, 150, 105, 0.28);
+        }
+
+        .btn-sms {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 9px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-sms:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .btn-email {
+            background: #dc2626;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 9px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-email:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+
+        .right-floating-widgets {
+            position: fixed;
+            bottom: 28px;
+            right: 25px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .floating-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+            transition: var(--transition);
+        }
+
+        .floating-icon.whatsapp {
+            background: var(--whatsapp-color);
+        }
+
+        .floating-icon.call {
+            background: var(--primary-dark);
+        }
+
+        .floating-icon:hover {
+            transform: scale(1.15) rotate(8deg);
+        }
+
+        .hero {
+            position: relative;
+            padding: 130px 5% 100px;
+            text-align: center;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.91) 0%, rgba(245, 247, 251, 0.96) 100%),
+                url('https://images.unsplash.com/photo-1588702547919-26089e690ecc?auto=format&fit=crop&w=1500&q=80') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: rgba(56, 189, 248, 0.12);
+            filter: blur(80px);
+            top: -250px;
+            right: -100px;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.08);
+            filter: blur(90px);
+            bottom: -250px;
+            left: -100px;
+        }
+
+        .hero-content {
+            max-width: 860px;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 999px;
+            background: rgba(2, 132, 199, 0.08);
+            border: 1px solid rgba(2, 132, 199, 0.2);
+            color: var(--primary-dark);
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 22px;
+            background: linear-gradient(135deg, #0f172a 35%, #0284c7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.18rem;
+            color: var(--text-secondary);
+            margin-bottom: 35px;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 80px 5%;
+            position: relative;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-title h2 {
+            font-size: 2.3rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title h2::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -6px;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .section-title p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 30px;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 34px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            transform: scaleX(0);
+            transition: var(--transition);
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            background: #ffffff;
+            border-color: #7dd3fc;
+            box-shadow: var(--shadow-md);
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .service-icon {
+            font-size: 2.4rem;
+            color: var(--primary);
+            margin-bottom: 22px;
+            display: inline-block;
+            transition: var(--transition);
+        }
+
+        .service-card:hover .service-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .service-card h3 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .service-card p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+        }
+
+        .service-card ul {
+            margin-top: 18px;
+            border-top: 1px solid var(--border-light);
+            padding-top: 14px;
+        }
+
+        .service-card ul li {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .service-card ul li i {
+            color: var(--accent);
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 22px;
+        }
+
+        .product-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 26px 20px;
+            text-align: center;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            background: #ffffff;
+            border-color: #7dd3fc;
+            box-shadow: 0 12px 28px rgba(2, 132, 199, 0.12);
+        }
+
+        .product-icon {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            transition: var(--transition);
+        }
+
+        .product-card:hover .product-icon {
+            transform: translateY(-4px);
+        }
+
+        .product-card h4 {
+            color: var(--text-main);
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .product-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .cta-banner {
+            background: linear-gradient(135deg, #ffffff, #f0f9ff);
+            border: 1px solid #bae6fd;
+            border-radius: 18px;
+            padding: 48px 30px;
+            text-align: center;
+            margin: 50px auto 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        .cta-banner h3 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .cta-banner p {
+            color: var(--text-secondary);
+            margin-bottom: 26px;
+        }
+
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 40px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            padding: 45px;
+            border-radius: 18px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .contact-info h3 {
+            color: var(--text-main);
+            font-size: 1.4rem;
+            margin-bottom: 22px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .info-item i {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-top: 4px;
+            background: #f0f9ff;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #bae6fd;
+        }
+
+        .info-item div strong {
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .info-item div {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .info-item a {
+            color: var(--primary-dark);
+        }
+
+        .info-item a:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            color: var(--text-main);
+            font-size: 0.92rem;
+            transition: var(--transition);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .equipment-selection-box {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            background: #ffffff;
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            color: var(--text-secondary);
+        }
+
+        .checkbox-item:hover {
+            border-color: #7dd3fc;
+            background: #f0f9ff;
+            color: var(--text-main);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 32px;
+            border-radius: 16px;
+            max-width: 620px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 18px;
+            right: 22px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: var(--text-main);
+            transform: rotate(90deg);
+        }
+
+        .auth-tab-buttons {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 22px;
+            gap: 10px;
+        }
+
+        .auth-tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+        }
+
+        .auth-tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .premium-footer {
+            margin-top: 80px;
+            padding: 70px 5% 24px;
+            background: #ffffff;
+            border-top: 1px solid var(--border);
+            position: relative;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1.2fr 1.2fr 1fr;
+            gap: 36px;
+            max-width: 1350px;
+            margin: 0 auto;
+        }
+
+        .footer-brand p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 14px 0;
+        }
+
+        .footer-column h4,
+        .footer-contact h4 {
+            color: var(--text-main);
+            font-size: 1.05rem;
+            margin-bottom: 16px;
+        }
+
+        .footer-column a {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            margin-bottom: 10px;
+            transition: var(--transition);
+        }
+
+        .footer-column a:hover {
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .footer-contact-item {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .footer-contact-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .footer-contact-item strong {
+            color: var(--text-main);
+        }
+
+        .footer-contact-item small {
+            color: var(--text-muted);
+        }
+
+        .footer-qr-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 18px;
+            border-radius: 14px;
+            text-align: center;
+        }
+
+        .qr-box {
+            display: inline-flex;
+            background: #ffffff;
+            padding: 8px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border: 1px solid var(--border);
+        }
+
+        .footer-bottom {
+            max-width: 1350px;
+            margin: 40px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .footer-bottom a:hover {
+            color: var(--primary) !important;
+        }
+
+        input[type="file"] {
+            padding: 10px !important;
+            background: #f8fafc !important;
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button {
+            border: none;
+            background: var(--primary);
+            color: #ffffff;
+            padding: 7px 12px;
+            border-radius: 6px;
+            margin-right: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        @media (max-width: 1150px) {
+            .nav-links {
+                gap: 16px;
+            }
+
+            .nav-right-actions {
+                gap: 6px;
+            }
+
+            .nav-location-btn span,
+            .btn-user-login span {
+                display: none;
+            }
+
+            .footer-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .nav-links {
+                display: none;
+            }
+
+            .contact-container {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .hero {
+                padding: 100px 5% 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                display: none;
+            }
+
+            nav {
+                padding: 11px 4%;
+            }
+
+            .brand-logo-img {
+                height: 45px;
+                max-width: 190px;
+            }
+
+            .nav-cart-btn {
+                padding: 8px 10px;
+            }
+
+            .nav-right-actions .btn-primary {
+                padding: 9px 13px;
+            }
+
+            .hero {
+                padding: 85px 5% 75px;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .container {
+                padding: 65px 5%;
+            }
+
+            .section-title h2 {
+                font-size: 1.9rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .contact-container {
+                padding: 28px 22px;
+            }
+
+            .btn-group {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .right-floating-widgets {
+                right: 16px;
+                bottom: 18px;
+            }
+
+            .floating-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 21px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-right-actions .btn-primary {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 1.85rem;
+            }
+
+            .hero-badge {
+                font-size: 0.7rem;
+                letter-spacing: 1px;
+            }
+
+            .hero-btns {
+                flex-direction: column;
+            }
+
+            .hero-btns .btn-primary,
+            .hero-btns .btn-call {
+                width: 100%;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .equipment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ambient-mesh">
+        <div class="ambient-blob blob-1"></div>
+        <div class="ambient-blob blob-2"></div>
+        <div class="ambient-blob blob-3"></div>
+    </div>
+
+    <div class="right-floating-widgets">
+        <a href="tel:+918368784998" class="floating-icon call" title="Call Now">
+            <i class="fa-solid fa-phone"></i>
+        </a>
+
+        <a href="https://wa.me/918368784998" class="floating-icon whatsapp" target="_blank" title="Chat on WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+        </a>
+    </div>
+
+    <div class="top-bar">
+        <div class="top-bar-info">
+            <span>
+                <a href="tel:+918368784998">
+                    <i class="fa-solid fa-phone"></i>
+                    +91 8368784998
+                </a>
+            </span>
+
+            <span>
+                <i class="fa-solid fa-envelope"></i>
+                techcoreitsolution47@gmail.com
+            </span>
+
+            <span>
+                <i class="fa-solid fa-clock"></i>
+                Mon - Sun: 9:30 AM - 8:00 PM
+            </span>
+        </div>
+
+        <div>
+            <span>
+                <i class="fa-solid fa-shield-halved"></i>
+                100% Genuine IT Hardware
+            </span>
+        </div>
+    </div>
+
+    <header>
+        <nav>
+            <a href="index.html" class="brand-logo-link" title="TechCore IT Solutions">
+                <img src="logo.png" alt="TechCore IT Solutions" class="brand-logo-img" onerror="this.onerror=null; this.src='logo_2.png';">
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#services">Services</a></li>
+                <!-- <li><a href="Accessories.html">Accessories</a></li> -->
+                <li><a onclick="openAmcModal()">AMC Services</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+
+            <div class="nav-right-actions">
+                <button type="button" class="nav-location-btn" id="autoLocationBtn" onclick="detectLiveLocation">
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                    <span id="detectedLocationText">Pick Location</span>
+                </button>
+
+                <button type="button" class="btn-user-login" onclick="openLoginModal('login')">
+                    <i class="fa-solid fa-user"></i>
+                    <span id="userAccountLabel">Login</span>
+                </button>
+
+                <a href="Accessories.html#cart" class="nav-cart-btn" title="View Cart">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-badge" id="cartBadgeCount">0</span>
+                </a>
+
+                <button class="btn-primary" onclick="openModal()">
+                    Get Quote
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fa-solid fa-bolt"></i>
+                Fast & Certified Hardware Experts
+            </div>
+
+            <h1>
+                Complete IT Solutions, Sales, Repair & CCTV Installation
+            </h1>
+
+            <p>
+                Your premier destination for high-performance computer sales,
+                quick doorstep repairs, CCTV security systems, and high-quality
+                genuine peripherals.
+            </p>
+
+            <div class="hero-btns">
+                <a href="tel:+918368784998" class="btn-primary">
+                    <i class="fa-solid fa-phone"></i>
+                    Instant Call Support
+                </a>
+
+                <a href="https://wa.me/918368784998" class="btn-call" target="_blank">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    Chat on WhatsApp
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="container" id="services">
+        <div class="section-title">
+            <h2>Our Core Services</h2>
+            <p>
+                Reliable hardware solutions and quick technical repair support
+                for home and business
+            </p>
+        </div>
+
+        <div class="services-grid">
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fa-solid fa-laptop"></i>
+                </div>
+
+                <h3>Laptop & Desktop Sales</h3>
+
+                <p>
+                    New and certified refurbished systems tailored for gaming,
+                    corporate workflows, and personal use.
+                </p>
+
+                <ul>
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Branded Laptops (Dell, HP, Lenovo, ASUS)
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Custom Built Gaming & Workstation PCs
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Certified Refurbished Desktops with Warranty
+                    </li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                </div>
+
+                <h3>Laptop & Desktop Repair</h3>
+
+                <p>
+                    Fast chip-level motherboard diagnosis and precision
+                    hardware repair by verified technicians.
+                </p>
+
+                <ul>
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Screen, Battery & Keyboard Replacement
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Motherboard Repair & Liquid Damage Fix
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Clean OS Installation & Antivirus Setup
+                    </li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fa-solid fa-video"></i>
+                </div>
+
+                <h3>CCTV Camera Solutions</h3>
+
+                <p>
+                    High-definition and IP security surveillance systems
+                    designed for residences, retail, and warehouses.
+                </p>
+
+                <ul>
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        HD Analog & IP Camera Deployments
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        End-to-End Structured Cabling & DVR/NVR
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Mobile Remote Live-View Integration
+                    </li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fa-solid fa-print"></i>
+                </div>
+
+                <h3>Printer Sales & Repair</h3>
+
+                <p>
+                    Comprehensive laser and inkjet printer servicing,
+                    drum refurbishment, and instant toner refill.
+                </p>
+
+                <ul>
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Multi-function Laser & Ink Tank Printers
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        High-yield Cartridge Refilling & Parts
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Jam Clearing & Wi-Fi Network Setup
+                    </li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fa-solid fa-hard-drive"></i>
+                </div>
+
+                <h3>Data Recovery & Upgrades</h3>
+
+                <p>
+                    Accelerate sluggish computers or recover mission-critical
+                    data from damaged internal storage.
+                </p>
+
+                <ul>
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Hard Drive to NVMe SSD Upgrades
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        DDR4 & DDR5 RAM Memory Expansions
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Corrupted Partition & Deleted File Extraction
+                    </li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+
+                <h3>Networking & AMC Support</h3>
+
+                <p>
+                    Structured office network architecture and Annual
+                    Maintenance Contracts for corporate entities.
+                </p>
+
+                <ul>
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Enterprise Mesh Wi-Fi & Switching Hubs
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        Comprehensive Corporate IT Maintenance Plans
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        <a onclick="openAmcModal()" style="color: var(--primary); font-weight: bold; cursor: pointer;">
+                            <u>Open AMC Pop-Up Form</u>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="container" id="accessories" style="padding-top: 0;">
+        <div class="section-title">
+            <h2>Parts & Accessories</h2>
+            <p>
+                Genuine computer components and peripherals at competitive prices
+            </p>
+        </div>
+
+        <div class="products-grid">
+
+            <a href="Accessories.html" class="product-card">
+                <div class="product-icon">
+                    <i class="fa-solid fa-memory"></i>
+                </div>
+
+                <h4>RAM & SSDs</h4>
+                <p>DDR4/DDR5 RAMs & High-Speed NVMe SSDs</p>
+            </a>
+
+            <a href="Accessories.html" class="product-card">
+                <div class="product-icon">
+                    <i class="fa-solid fa-keyboard"></i>
+                </div>
+
+                <h4>Keyboards & Mice</h4>
+                <p>Wired, Wireless & Mechanical Combos</p>
+            </a>
+
+            <a href="Accessories.html" class="product-card">
+                <div class="product-icon">
+                    <i class="fa-solid fa-plug"></i>
+                </div>
+
+                <h4>Adapters & Cables</h4>
+                <p>Original Chargers, 4K HDMI & Cat6 LAN</p>
+            </a>
+
+            <a href="Accessories.html" class="product-card">
+                <div class="product-icon">
+                    <i class="fa-solid fa-wifi"></i>
+                </div>
+
+                <h4>Networking Gear</h4>
+                <p>Dual-Band Routers, Range Extenders & Hubs</p>
+            </a>
+
+        </div>
+
+        <div class="cta-banner">
+            <h3>Need Emergency Hardware Support or CCTV Installation?</h3>
+
+            <p>
+                Contact our certified technical crew for immediate diagnostics
+                and doorstep service.
+            </p>
+
+            <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn-primary" onclick="openModal()">
+                    Book Repair Service
+                </button>
+
+                <button class="btn-call" onclick="openAmcModal()">
+                    Book AMC Plan
+                </button>
+
+                <a href="Accessories.html" class="btn-sms">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    Visit Store
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="container" id="contact" style="padding-top: 0;">
+        <div class="section-title">
+            <h2>Contact Us & Submit Query</h2>
+            <p>
+                Select required equipment, fill your requirements, and reach
+                our team directly.
+            </p>
+        </div>
+
+        <div class="contact-container">
+
+            <div class="contact-info">
+                <h3>Store Information</h3>
+
+                <div class="info-item">
+                    <i class="fa-solid fa-location-dot"></i>
+
+                    <div>
+                        <strong>Address:</strong><br>
+                        TechCore IT Solution, Ghaziabad, UP-201204
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <i class="fa-solid fa-phone"></i>
+
+                    <div>
+                        <strong>Phone / SMS:</strong><br>
+                        <a href="tel:+918368784998">+91 8368784998</a>
+                        /
+                        +91 7503001287
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <i class="fa-solid fa-envelope"></i>
+
+                    <div>
+                        <strong>Email:</strong><br>
+                        techcoreitsolution47@gmail.com
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <i class="fa-solid fa-star"></i>
+
+                    <div>
+                        <strong>About Us:</strong><br>
+                        TechCore IT Solutions is a recognized tech services
+                        hub dedicated to fast chip-level repairs, surveillance
+                        installations, and verified OEM spare supply across
+                        the Delhi NCR region.
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-form">
+                <form id="inquiryForm">
+
+                    <div class="form-group">
+                        <label for="name">Your Name *</label>
+                        <input type="text" id="name" required placeholder="Full Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" required placeholder="10-digit mobile number">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Address *</label>
+                        <input type="text" id="address" required placeholder="Street / Sector / City">
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <i class="fa-solid fa-list-check"></i>
+                            Select IT Equipment & Services:
+                        </label>
+
+                        <div class="equipment-selection-box">
+                            <div class="equipment-grid">
+
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="equipment" value="New Laptop / Desktop">
+                                    New Laptop/Desktop
+                                </label>
+
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="equipment" value="Refurbished Laptop / PC">
+                                    Refurbished PC
+                                </label>
+
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="equipment" value="Laptop/Desktop Repair">
+                                    Device Repair
+                                </label>
+
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="equipment" value="RAM / SSD Upgrade">
+                                    RAM / SSD Upgrade
+                                </label>
+
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="equipment" value="CCTV Camera & DVR">
+                                    CCTV Setup
+                                </label>
+
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="equipment" value="Printer Repair / Cartridge">
+                                    Printer Maintenance
+                                </label>
+
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="equipment" value="Wi-Fi Router & Switch">
+                                    Network Setup
+                                </label>
+
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="equipment" value="Server & Networking AMC">
+                                    IT AMC Contract
+                                </label>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Details / Issue Description</label>
+
+                        <textarea
+                            id="message"
+                            rows="2"
+                            placeholder="Specify requirements, model, or hardware problem..."
+                        ></textarea>
+                    </div>
+
+                    <button
+                        type="button"
+                        onclick="submitInquiryOnly()"
+                        class="btn-submit-db"
+                    >
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Submit Request
+                    </button>
+
+                    <div class="btn-group">
+                        <button
+                            type="button"
+                            onclick="sendInquiryToWhatsApp()"
+                            class="btn-primary"
+                        >
+                            <i class="fa-brands fa-whatsapp"></i>
+                            WhatsApp
+                        </button>
+
+                        <button
+                            type="button"
+                            onclick="sendDirectEmail()"
+                            class="btn-email"
+                        >
+                            <i class="fa-solid fa-envelope"></i>
+                            Email
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </section>
+
+    <div class="modal" id="loginModal">
+        <div class="modal-content" style="max-width: 440px;">
+
+            <span class="close-modal" onclick="closeLoginModal()">
+                &times;
+            </span>
+
+            <div class="auth-tab-buttons">
+
+                <button
+                    type="button"
+                    class="auth-tab-btn active"
+                    id="tabBtnLogin"
+                    onclick="switchAuthTab('login')"
+                >
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    Login
+                </button>
+
+                <button
+                    type="button"
+                    class="auth-tab-btn"
+                    id="tabBtnRegister"
+                    onclick="switchAuthTab('register')"
+                >
+                    <i class="fa-solid fa-user-plus"></i>
+                    Register
+                </button>
+
+            </div>
+
+            <form id="userLoginForm" onsubmit="handleUserLogin(event)">
+
+                <div class="form-group">
+                    <label>Email or Mobile Number</label>
+                    <input
+                        type="text"
+                        id="loginIdentifier"
+                        required
+                        placeholder="Mobile or email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        required
+                        placeholder="Enter password"
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn-primary"
+                    style="width: 100%; margin-top: 10px;"
+                >
+                    Login
+                </button>
+
+            </form>
+
+            <form
+                id="userRegisterForm"
+                style="display: none;"
+                onsubmit="handleUserRegister(event)"
+            >
+
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input
+                        type="text"
+                        id="regName"
+                        required
+                        placeholder="Your Name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Mobile Number *</label>
+                    <input
+                        type="tel"
+                        id="regPhone"
+                        required
+                        placeholder="10-digit number"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input
+                        type="email"
+                        id="regEmail"
+                        placeholder="Email (optional)"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Create Password *</label>
+                    <input
+                        type="password"
+                        id="regPassword"
+                        required
+                        placeholder="Set password"
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn-call"
+                    style="width: 100%; margin-top: 10px;"
+                >
+                    Create Account
+                </button>
+
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="quoteModal">
+        <div class="modal-content">
+
+            <span class="close-modal" onclick="closeModal()">
+                &times;
+            </span>
+
+            <h3 style="margin-bottom: 15px; color: var(--text-main);">
+                Request a Quick Quote
+            </h3>
+
+            <form id="quoteModalForm">
+
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input
+                        type="text"
+                        id="modalName"
+                        required
+                        placeholder="Name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Mobile Number *</label>
+                    <input
+                        type="tel"
+                        id="modalPhone"
+                        required
+                        placeholder="Phone"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input
+                        type="email"
+                        id="modalEmail"
+                        placeholder="Email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Location</label>
+                    <input
+                        type="text"
+                        id="modalLocation"
+                        placeholder="Location"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fa-solid fa-list-check"></i>
+                        Select Equipment:
+                    </label>
+
+                    <div class="equipment-selection-box">
+                        <div class="equipment-grid">
+
+                            <label class="checkbox-item">
+                                <input
+                                    type="checkbox"
+                                    name="modalEquipment"
+                                    value="New Laptop / Desktop"
+                                >
+                                New PC/Laptop
+                            </label>
+
+                            <label class="checkbox-item">
+                                <input
+                                    type="checkbox"
+                                    name="modalEquipment"
+                                    value="Refurbished Laptop / PC"
+                                >
+                                Refurbished PC
+                            </label>
+
+                            <label class="checkbox-item">
+                                <input
+                                    type="checkbox"
+                                    name="modalEquipment"
+                                    value="Laptop/Desktop Repair"
+                                >
+                                Device Repair
+                            </label>
+
+                            <label class="checkbox-item">
+                                <input
+                                    type="checkbox"
+                                    name="modalEquipment"
+                                    value="RAM / SSD Upgrade"
+                                >
+                                RAM/SSD Upgrade
+                            </label>
+
+                        </div>
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    onclick="submitQuoteOnly()"
+                    class="btn-submit-db"
+                >
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Submit Quote
+                </button>
+
+                <div class="btn-group">
+
+                    <button
+                        type="button"
+                        onclick="sendQuoteToWhatsApp()"
+                        class="btn-primary"
+                    >
+                        <i class="fa-brands fa-whatsapp"></i>
+                        WhatsApp
+                    </button>
+
+                    <button
+                        type="button"
+                        onclick="sendQuoteEmail()"
+                        class="btn-email"
+                    >
+                        <i class="fa-solid fa-envelope"></i>
+                        Email
+                    </button>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="amcModal">
+        <div class="modal-content">
+
+            <span class="close-modal" onclick="closeAmcModal()">
+                &times;
+            </span>
+
+            <h3 style="margin-bottom: 8px; color: var(--text-main);">
+                <i
+                    class="fa-solid fa-file-contract"
+                    style="color: var(--primary);"
+                ></i>
+                AMC Request Plan
+            </h3>
+
+            <p
+                style="
+                    margin-bottom: 18px;
+                    color: var(--text-muted);
+                    font-size: 0.88rem;
+                "
+            >
+                Submit your inventory details or attach an equipment checklist.
+            </p>
+
+            <form id="amcModalForm">
+
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input
+                        type="text"
+                        id="amcName"
+                        required
+                        placeholder="Full Name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Mobile Number *</label>
+                    <input
+                        type="tel"
+                        id="amcPhone"
+                        required
+                        placeholder="Phone Number"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Location *</label>
+                    <input
+                        type="text"
+                        id="amcLocation"
+                        required
+                        placeholder="Office Address"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input
+                        type="text"
+                        id="amcCompany"
+                        placeholder="Company Name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fa-solid fa-square-check"></i>
+                        Select Scope:
+                    </label>
+
+                    <div class="equipment-selection-box">
+                        <div class="equipment-grid">
+
+                            <label class="checkbox-item">
+                                <input
+                                    type="checkbox"
+                                    name="amcEquipment"
+                                    value="Laptop AMC"
+                                >
+                                Laptop AMC
+                            </label>
+
+                            <label class="checkbox-item">
+                                <input
+                                    type="checkbox"
+                                    name="amcEquipment"
+                                    value="Desktop AMC"
+                                >
+                                Desktop AMC
+                            </label>
+
+                            <label class="checkbox-item">
+                                <input
+                                    type="checkbox"
+                                    name="amcEquipment"
+                                    value="Server AMC"
+                                >
+                                Server AMC
+                            </label>
+
+                            <label class="checkbox-item">
+                                <input
+                                    type="checkbox"
+                                    name="amcEquipment"
+                                    value="Network AMC"
+                                >
+                                Network AMC
+                            </label>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Quantity & System Specs:</label>
+
+                    <textarea
+                        id="amcManualDetails"
+                        rows="2"
+                        placeholder="e.g. 10 Laptops, 4 Desktops, 1 NAS"
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="amcFileUpload">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        Attach Document/List (Max 5MB):
+                    </label>
+
+                    <input
+                        type="file"
+                        id="amcFileUpload"
+                        accept="image/*,.pdf,.doc,.docx,.txt"
+                        onchange="handleFileSelect(event)"
+                    >
+
+                    <small
+                        id="fileSelectedName"
+                        style="
+                            color: var(--primary);
+                            display: block;
+                            margin-top: 5px;
+                        "
+                    ></small>
+                </div>
+
+                <button
+                    type="button"
+                    onclick="submitAmcOnly()"
+                    class="btn-submit-db"
+                    id="amcSubmitBtn"
+                >
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Submit AMC Inquiry
+                </button>
+
+            </form>
+        </div>
+    </div>
+
+    <footer class="premium-footer">
+
+        <div class="footer-grid">
+
+            <div class="footer-brand">
+
+                <img
+                    src="logo.png"
+                    alt="TechCore IT Solutions"
+                    class="brand-logo-img"
+                    onerror="this.onerror=null; this.src='logo_2.png';"
+                >
+
+                <p>
+                    Enterprise and residential IT solutions across Delhi NCR.
+                    Certified computer repairs, genuine hardware upgrades,
+                    and complete network infrastructure.
+                </p>
+
+            </div>
+
+            <div class="footer-column">
+
+                <h4>Quick Links</h4>
+
+                <a href="#home">Home</a>
+                <a href="#services">Services</a>
+                <a href="Accessories.html">Accessories</a>
+                <a href="#contact">Contact Support</a>
+
+            </div>
+
+            <div class="footer-column">
+
+                <h4>Services</h4>
+
+                <a href="#services">Laptop/Desktop Repair</a>
+                <a href="#services">CCTV Surveillance</a>
+                <a href="#services">Data Recovery</a>
+                <a href="#services">Corporate AMC</a>
+
+            </div>
+
+            <div class="footer-contact">
+
+                <h4>Contact Info</h4>
+
+                <div class="footer-contact-item">
+
+                    <span class="footer-contact-icon">
+                        <i class="fa-solid fa-phone"></i>
+                    </span>
+
+                    <div>
+                        <strong>Call Us</strong><br>
+                        <small>+91 8368784998</small>
+                    </div>
+
+                </div>
+
+                <div class="footer-contact-item">
+
+                    <span class="footer-contact-icon">
+                        <i class="fa-solid fa-envelope"></i>
+                    </span>
+
+                    <div>
+                        <strong>Email</strong><br>
+                        <small>techcoreitsolution47@gmail.com</small>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="footer-qr-card">
+
+                <strong style="color: var(--text-main); font-size: 0.88rem;">
+                    <i class="fa-solid fa-qrcode"></i>
+                    Quick Connect
+                </strong>
+
+                <div class="qr-box">
+                    <div id="techcoreQRCode"></div>
+                </div>
+
+                <p style="font-size: 0.75rem; color: var(--text-muted);">
+                    Scan to connect instantly
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+
+            <span>
+                &copy; 2026 TechCore IT Solutions. All rights reserved.
+            </span>
+
+            <span>
+                <a href="Admin.html" style="color: inherit;">
+                    <i class="fa-solid fa-lock"></i>
+                    Admin Portal
+                </a>
+            </span>
+
+        </div>
+
+    </footer>
+
+    <script>
+        const GOOGLE_DRIVE_API_URL = "https://script.google.com/macros/s/AKfycbz7-huAwY8skJ0Ry-AWQnJQ5wgTExPWca1jPnYIsWY59ZA4rAP-pYeD92IxSoiFTXPa/exec";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBIF4lvtKMfCBcbWzWPvBSodBIU31rdQ0M",
+            authDomain: "techcore-it-solutions.firebaseapp.com",
+            databaseURL: "https://techcore-it-solutions-default-rtdb.firebaseio.com",
+            projectId: "techcore-it-solutions",
+            storageBucket: "techcore-it-solutions.firebasestorage.app",
+            messagingSenderId: "467350961150",
+            appId: "1:467350961150:web:769bfc70f42d8a5b54deaf",
+            measurementId: "G-LHW74L17S7"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        const db = firebase.firestore();
+        const rtdb = firebase.database();
+
+        const targetSMSNumber = "8368784998";
+        const targetEmail = "techcoreitsolution47@gmail.com";
+
+        let uploadedFileName = "";
+        let uploadedBase64Data = "";
+
+        const storedUserName = localStorage.getItem("techcore_user_name");
+
+        if (storedUserName) {
+            document.getElementById("userAccountLabel").innerText =
+                storedUserName.split(" ")[0];
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const qrTarget = window.location.href.split("#")[0];
+            const qrElement = document.getElementById("techcoreQRCode");
+
+            if (qrElement && typeof QRCode !== "undefined") {
+                new QRCode(qrElement, {
+                    text: qrTarget,
+                    width: 110,
+                    height: 110,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            }
+        });
+
+        function startVisitorTracking() {
+            if (!sessionStorage.getItem("techcore_visited")) {
+                rtdb.ref("stats/totalVisits").transaction(
+                    current => (current || 0) + 1
+                );
+
+                sessionStorage.setItem("techcore_visited", "true");
+            }
+
+            const connectedRef = rtdb.ref(".info/connected");
+            const myPresenceRef = rtdb.ref("stats/liveSessions").push();
+
+            connectedRef.on("value", snap => {
+                if (snap.val() === true) {
+                    myPresenceRef.onDisconnect().remove();
+
+                    myPresenceRef.set({
+                        online: true,
+                        time: Date.now(),
+                        page: "Home Page"
+                    });
+                }
+            });
+        }
+
+        startVisitorTracking();
+
+        function detectLiveLocation() {
+            const locText =
+                document.getElementById("detectedLocationText");
+
+            const locBtn =
+                document.getElementById("autoLocationBtn");
+
+            if (!navigator.geolocation) {
+                alert("Geolocation not supported.");
+                return;
+            }
+
+            locText.innerText = "Detecting...";
+            locBtn.style.opacity = "0.7";
+
+            navigator.geolocation.getCurrentPosition(
+                async pos => {
+                    try {
+                        const res = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`
+                        );
+
+                        const data = await res.json();
+
+                        const area =
+                            data.address.suburb ||
+                            data.address.city ||
+                            "Delhi NCR";
+
+                        locText.innerText = area;
+                        locBtn.style.opacity = "1";
+
+                        const addressField =
+                            document.getElementById("address");
+
+                        if (addressField) {
+                            addressField.value = area;
+                        }
+
+                        const modalLocation =
+                            document.getElementById("modalLocation");
+
+                        if (modalLocation) {
+                            modalLocation.value = area;
+                        }
+
+                        const amcLocation =
+                            document.getElementById("amcLocation");
+
+                        if (amcLocation && !amcLocation.value) {
+                            amcLocation.value = area;
+                        }
+
+                    } catch (err) {
+                        locText.innerText = "Delhi NCR";
+                        locBtn.style.opacity = "1";
+                    }
+                },
+                () => {
+                    locText.innerText = "Delhi NCR";
+                    locBtn.style.opacity = "1";
+                },
+                {
+                    timeout: 8000
+                }
+            );
+        }
+
+        function openLoginModal(tab = "login") {
+            document.getElementById("loginModal").style.display = "flex";
+            switchAuthTab(tab);
+        }
+
+        function closeLoginModal() {
+            document.getElementById("loginModal").style.display = "none";
+        }
+
+        function switchAuthTab(tab) {
+            document.getElementById("userLoginForm").style.display =
+                tab === "login" ? "block" : "none";
+
+            document.getElementById("userRegisterForm").style.display =
+                tab === "register" ? "block" : "none";
+
+            document.getElementById("tabBtnLogin").classList.toggle(
+                "active",
+                tab === "login"
+            );
+
+            document.getElementById("tabBtnRegister").classList.toggle(
+                "active",
+                tab === "register"
+            );
+        }
+
+        function handleUserRegister(e) {
+            e.preventDefault();
+
+            const name =
+                document.getElementById("regName").value.trim();
+
+            const phone =
+                document.getElementById("regPhone").value.trim();
+
+            const email =
+                document.getElementById("regEmail").value.trim();
+
+            const password =
+                document.getElementById("regPassword").value;
+
+            if (!name || !phone || !password) {
+                alert("Please complete all required fields.");
+                return;
+            }
+
+            db.collection("users")
+                .add({
+                    name,
+                    phone,
+                    email,
+                    password,
+                    createdAt:
+                        firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(docRef => {
+                    localStorage.setItem(
+                        "techcore_user_id",
+                        docRef.id
+                    );
+
+                    localStorage.setItem(
+                        "techcore_user_name",
+                        name
+                    );
+
+                    document.getElementById(
+                        "userAccountLabel"
+                    ).innerText = name.split(" ")[0];
+
+                    alert("Account created successfully!");
+
+                    closeLoginModal();
+                })
+                .catch(() => {
+                    alert("Registration failed. Please retry.");
+                });
+        }
+
+        function handleUserLogin(e) {
+            e.preventDefault();
+
+            const iden =
+                document.getElementById(
+                    "loginIdentifier"
+                ).value.trim();
+
+            const pass =
+                document.getElementById(
+                    "loginPassword"
+                ).value;
+
+            db.collection("users")
+                .where("phone", "==", iden)
+                .where("password", "==", pass)
+                .get()
+                .then(snap => {
+                    if (!snap.empty) {
+                        const userDoc = snap.docs[0];
+                        const user = userDoc.data();
+
+                        localStorage.setItem(
+                            "techcore_user_id",
+                            userDoc.id
+                        );
+
+                        localStorage.setItem(
+                            "techcore_user_name",
+                            user.name
+                        );
+
+                        document.getElementById(
+                            "userAccountLabel"
+                        ).innerText =
+                            user.name.split(" ")[0];
+
+                        closeLoginModal();
+                    } else {
+                        alert("Invalid credentials.");
+                    }
+                })
+                .catch(() => {
+                    alert("Login failed. Please try again.");
+                });
+        }
+
+        function openModal() {
+            document.getElementById("quoteModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("quoteModal").style.display = "none";
+        }
+
+        function openAmcModal() {
+            document.getElementById("amcModal").style.display = "flex";
+        }
+
+        function closeAmcModal() {
+            document.getElementById("amcModal").style.display = "none";
+        }
+
+        window.onclick = function(e) {
+            if (
+                e.target ===
+                document.getElementById("quoteModal")
+            ) {
+                closeModal();
+            }
+
+            if (
+                e.target ===
+                document.getElementById("amcModal")
+            ) {
+                closeAmcModal();
+            }
+
+            if (
+                e.target ===
+                document.getElementById("loginModal")
+            ) {
+                closeLoginModal();
+            }
+        };
+
+        function getSelectedEquipment() {
+            const checkboxes =
+                document.querySelectorAll(
+                    'input[name="equipment"]:checked'
+                );
+
+            return (
+                Array.from(checkboxes)
+                    .map(cb => cb.value)
+                    .join(", ") ||
+                "General Inquiry"
+            );
+        }
+
+        function getSelectedModalEquipment() {
+            const checkboxes =
+                document.querySelectorAll(
+                    'input[name="modalEquipment"]:checked'
+                );
+
+            return (
+                Array.from(checkboxes)
+                    .map(cb => cb.value)
+                    .join(", ") ||
+                "General Quote"
+            );
+        }
+
+        function getSelectedAmcEquipment() {
+            const checkboxes =
+                document.querySelectorAll(
+                    'input[name="amcEquipment"]:checked'
+                );
+
+            return (
+                Array.from(checkboxes)
+                    .map(cb => cb.value)
+                    .join(", ") ||
+                "General AMC"
+            );
+        }
+
+        function submitInquiryOnly() {
+            const name =
+                document.getElementById("name").value.trim();
+
+            const phone =
+                document.getElementById("phone").value.trim();
+
+            const address =
+                document.getElementById("address").value.trim();
+
+            const message =
+                document.getElementById("message").value.trim() ||
+                "N/A";
+
+            const equipment = getSelectedEquipment();
+
+            if (!name || !phone || !address) {
+                alert("Please complete all required fields.");
+                return;
+            }
+
+            db.collection("submissions")
+                .add({
+                    type: "Inquiry",
+                    name,
+                    phone,
+                    address,
+                    equipment,
+                    message,
+                    status: "Pending",
+                    timestamp:
+                        firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    alert("Inquiry submitted successfully!");
+                    document.getElementById(
+                        "inquiryForm"
+                    ).reset();
+                })
+                .catch(() => {
+                    alert(
+                        "Unable to submit inquiry. Please try again."
+                    );
+                });
+        }
+
+        function sendInquiryToWhatsApp() {
+            const name =
+                document.getElementById("name").value.trim();
+
+            const phone =
+                document.getElementById("phone").value.trim();
+
+            const address =
+                document.getElementById("address").value.trim();
+
+            const equipment = getSelectedEquipment();
+
+            const message =
+                document.getElementById("message").value.trim() ||
+                "N/A";
+
+            if (!name || !phone) {
+                alert("Please enter name and phone.");
+                return;
+            }
+
+            const waText =
+                `*New Inquiry*\n` +
+                `👤 *Name:* ${name}\n` +
+                `📞 *Phone:* ${phone}\n` +
+                `📍 *Address:* ${address || "N/A"}\n` +
+                `🛠️ *Equipment:* ${equipment}\n` +
+                `📝 *Details:* ${message}`;
+
+            window.open(
+                `https://wa.me/91${targetSMSNumber}?text=${encodeURIComponent(waText)}`,
+                "_blank"
+            );
+        }
+
+        function sendDirectEmail() {
+            const name =
+                document.getElementById("name").value.trim();
+
+            const phone =
+                document.getElementById("phone").value.trim();
+
+            const address =
+                document.getElementById("address").value.trim();
+
+            const equipment = getSelectedEquipment();
+
+            const message =
+                document.getElementById("message").value.trim() ||
+                "N/A";
+
+            if (!name || !phone) {
+                alert("Please enter name and phone.");
+                return;
+            }
+
+            const subject =
+                `Service Request - ${name}`;
+
+            const body =
+                `Name: ${name}\n` +
+                `Phone: ${phone}\n` +
+                `Address: ${address}\n` +
+                `Selected: ${equipment}\n` +
+                `Details: ${message}`;
+
+            window.location.href =
+                `mailto:${targetEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+
+        function submitQuoteOnly() {
+            const name =
+                document.getElementById("modalName").value.trim();
+
+            const phone =
+                document.getElementById("modalPhone").value.trim();
+
+            const email =
+                document.getElementById("modalEmail").value.trim();
+
+            const location =
+                document.getElementById("modalLocation").value.trim();
+
+            const equipment =
+                getSelectedModalEquipment();
+
+            if (!name || !phone) {
+                alert("Please fill required fields.");
+                return;
+            }
+
+            db.collection("submissions")
+                .add({
+                    type: "Quote",
+                    name,
+                    phone,
+                    email,
+                    location,
+                    equipment,
+                    status: "Pending",
+                    timestamp:
+                        firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    alert("Quote request sent!");
+
+                    document.getElementById(
+                        "quoteModalForm"
+                    ).reset();
+
+                    closeModal();
+                })
+                .catch(() => {
+                    alert(
+                        "Unable to submit quote. Please try again."
+                    );
+                });
+        }
+
+        function sendQuoteToWhatsApp() {
+            const name =
+                document.getElementById("modalName").value.trim();
+
+            const phone =
+                document.getElementById("modalPhone").value.trim();
+
+            const email =
+                document.getElementById("modalEmail").value.trim();
+
+            const location =
+                document.getElementById("modalLocation").value.trim();
+
+            const equipment =
+                getSelectedModalEquipment();
+
+            if (!name || !phone) {
+                alert("Please enter name and phone.");
+                return;
+            }
+
+            const text =
+                `*New Quote Request*\n` +
+                `👤 *Name:* ${name}\n` +
+                `📞 *Phone:* ${phone}\n` +
+                `📧 *Email:* ${email || "N/A"}\n` +
+                `📍 *Location:* ${location || "N/A"}\n` +
+                `🛠️ *Equipment:* ${equipment}`;
+
+            window.open(
+                `https://wa.me/91${targetSMSNumber}?text=${encodeURIComponent(text)}`,
+                "_blank"
+            );
+        }
+
+        function sendQuoteEmail() {
+            const name =
+                document.getElementById("modalName").value.trim();
+
+            const phone =
+                document.getElementById("modalPhone").value.trim();
+
+            const email =
+                document.getElementById("modalEmail").value.trim();
+
+            const location =
+                document.getElementById("modalLocation").value.trim();
+
+            const equipment =
+                getSelectedModalEquipment();
+
+            if (!name || !phone) {
+                alert("Please enter name and phone.");
+                return;
+            }
+
+            const subject =
+                `Quote Request - ${name}`;
+
+            const body =
+                `Name: ${name}\n` +
+                `Phone: ${phone}\n` +
+                `Email: ${email}\n` +
+                `Location: ${location}\n` +
+                `Equipment: ${equipment}`;
+
+            window.location.href =
+                `mailto:${targetEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+
+        function submitAmcOnly() {
+            const name =
+                document.getElementById("amcName").value.trim();
+
+            const phone =
+                document.getElementById("amcPhone").value.trim();
+
+            const location =
+                document.getElementById("amcLocation").value.trim();
+
+            const company =
+                document.getElementById("amcCompany").value.trim();
+
+            const equipment =
+                getSelectedAmcEquipment();
+
+            const details =
+                document.getElementById(
+                    "amcManualDetails"
+                ).value.trim();
+
+            if (!name || !phone || !location) {
+                alert("Please fill all required fields.");
+                return;
+            }
+
+            const submitBtn =
+                document.getElementById("amcSubmitBtn");
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML =
+                '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+            db.collection("submissions")
+                .add({
+                    type: "AMC Request",
+                    name,
+                    phone,
+                    location,
+                    company,
+                    equipment,
+                    details,
+                    fileName: uploadedFileName || "",
+                    fileAttached: !!uploadedFileName,
+                    status: "Pending",
+                    timestamp:
+                        firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    alert("AMC request registered!");
+
+                    document.getElementById(
+                        "amcModalForm"
+                    ).reset();
+
+                    document.getElementById(
+                        "fileSelectedName"
+                    ).innerText = "";
+
+                    uploadedFileName = "";
+                    uploadedBase64Data = "";
+
+                    closeAmcModal();
+                })
+                .catch(() => {
+                    alert(
+                        "Unable to submit AMC request. Please try again."
+                    );
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+
+                    submitBtn.innerHTML =
+                        '<i class="fa-solid fa-paper-plane"></i> Submit AMC Inquiry';
+                });
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+
+            if (!file) {
+                uploadedFileName = "";
+                uploadedBase64Data = "";
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File size exceeds 5 MB limit.");
+
+                event.target.value = "";
+
+                uploadedFileName = "";
+                uploadedBase64Data = "";
+
+                return;
+            }
+
+            uploadedFileName = file.name;
+
+            document.getElementById(
+                "fileSelectedName"
+            ).innerText =
+                "Selected: " + file.name;
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                uploadedBase64Data = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        window.addEventListener("keydown", function(e) {
+            if (e.key === "Escape") {
+                closeModal();
+                closeAmcModal();
+                closeLoginModal();
+            }
+        });
+
+        function updateCartBadge() {
+            try {
+                const cart =
+                    JSON.parse(
+                        localStorage.getItem("techcore_cart") || "[]"
+                    );
+
+                const count =
+                    cart.reduce(
+                        (total, item) =>
+                            total + Number(item.quantity || 1),
+                        0
+                    );
+
+                const badge =
+                    document.getElementById("cartBadgeCount");
+
+                if (badge) {
+                    badge.innerText = count;
+                }
+            } catch (error) {
+                const badge =
+                    document.getElementById("cartBadgeCount");
+
+                if (badge) {
+                    badge.innerText = "0";
+                }
+            }
+        }
+
+        updateCartBadge();
+
+        window.addEventListener("storage", updateCartBadge);
+    </script>
+
+</body>
+</html>
